@@ -244,9 +244,17 @@ export default function GuidedJourneyDemo(){
         </TabsList>
 
         <TabsContent value="diagnosis" className="p-0">
-          <div className="mb-3 text-xs text-gray-600 bg-white border rounded-md p-3">
-            <div><b>대상</b>: 시험지(모의고사 포함)·필기 이미지/PDF/텍스트</div>
-            <div className="mt-1"><b>목적</b>: OCR → 채점/메모 분석 → 개념 정렬 → 개인화 추천/코스 파일 생성</div>
+          <div className="w-full mb-4">
+            <img 
+              src="/ai-coaching-infographic.svg" 
+              alt="AI 코칭 프로세스" 
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-4 gap-y-4 items-stretch">
             {/* 좌: 업로드 */}
@@ -400,6 +408,19 @@ export default function GuidedJourneyDemo(){
         </TabsContent>
 
         <TabsContent value="chatbot" className="p-0">
+          {/* AI LLM 챗봇 인포그래픽 */}
+          <div className="w-full mb-4">
+            <img 
+              src="/ai-llm-chatbot-infographic.svg" 
+              alt="AI LLM 챗봇 코치" 
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+          </div>
           <div className="w-full mb-4 text-xs text-gray-600 bg-white border rounded-md p-3">
             <div><b>대상</b>: 세션(과목/분야)별 자료 업로드·관리</div>
             <div className="mt-1"><b>목적</b>: 업로드 자료 기반 질의응답·요약·퀴즈·노트/파일 생성·지식 업데이트·트래킹</div>

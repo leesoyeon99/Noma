@@ -970,6 +970,24 @@ export default function App(){
           </div>
         ) : (
           <div style={{padding: 8}}>
+            {/* AI 코칭 인포그래픽 */}
+            <div className="mb-6 text-center">
+              <img 
+                src="/ai-coaching-infographic.svg" 
+                alt="AI 코칭 프로세스" 
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                onLoad={() => console.log('AI 코칭 이미지 로드 성공')}
+                onError={(e) => console.error('AI 코칭 이미지 로드 실패:', e)}
+              />
+              <p style={{marginTop: '8px', fontSize: '12px', color: '#666'}}>
+                AI 코칭 프로세스: 데이터 입력 → AI 분석 → 맞춤 코칭 제공
+              </p>
+            </div>
             <AICoachShell />
           </div>
         )}

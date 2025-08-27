@@ -160,7 +160,7 @@ export default function AICoachFilesTrackingChat() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
-      <div className="mx-auto max-w-6xl bg-white rounded-2xl shadow">
+      <div className="w-full bg-white rounded-2xl shadow">
         {/* 헤더 */}
         <div className="p-5 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

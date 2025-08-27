@@ -148,7 +148,7 @@ export default function AICoachRag({ goal, onGoalChange, material, onMaterialCha
   const dailyTarget = summary && daysLeft && daysLeft > 0 ? Math.ceil(remain / daysLeft) : undefined
 
   return (
-    <div className="mx-auto max-w-6xl bg-white rounded-2xl shadow">
+    <div className="w-full bg-white rounded-2xl shadow">
       <div className="p-5 border-b">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">

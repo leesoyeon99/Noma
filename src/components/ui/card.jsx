@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const Card = ({children}) => <div className="card">{children}</div>
-export const CardHeader = ({children}) => <div className="card-header">{children}</div>
-export const CardTitle = ({children}) => <div className="card-title">{children}</div>
-export const CardContent = ({children}) => <div className="card-content">{children}</div>
+export const Card = ({children, className = ''}) => <div className={"card " + className}>{children}</div>
+export const CardHeader = ({children, className = ''}) => <div className={"card-header " + className}>{children}</div>
+export const CardTitle = ({children, className = ''}) => <div className={"card-title " + className}>{children}</div>
+export const CardContent = ({children, className = ''}) => <div className={"card-content " + className}>{children}</div>

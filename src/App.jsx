@@ -7,6 +7,7 @@ import AICoachShell from './pages/AICoachShell'
 import TuiCalendar from './components/TuiCalendar'
 import AICoachFilesTrackingChat from './pages/AICoachFilesTrackingChat'
 import MultiDomainCoachHub from './pages/MultiDomainCoachHub'
+import GuidedJourneyDemo from './pages/GuidedJourneyDemo'
 
 // 기본 투두
 const DEFAULT_WORKOUT = [
@@ -120,6 +121,7 @@ export default function App(){
   const [newCategoryName, setNewCategoryName] = useState('')
   const [showAddInputExtra, setShowAddInputExtra] = useState({}) // { [catId]: bool }
   const [newTodoTextExtra, setNewTodoTextExtra] = useState({}) // { [catId]: string }
+  const [rightPanel, setRightPanel] = useState({ type: 'todo', payload: null })
   const parseTimeRange = (label) => {
     if (!label) return null
     const m = label.match(/(\d{1,2}):(\d{2})\s*[~–-]\s*(\d{1,2}):(\d{2})/)
@@ -258,6 +260,11 @@ export default function App(){
     if (!text) return
     setNomaMessages(prev => [...prev, { role: 'user', text }, { role: 'assistant', text: '답변을 준비 중입니다…' }])
     setNomaInput('')
+  }
+
+  const openSidePanel = (type, payload=null) => {
+    setRightPanel({ type, payload })
+    setShowRightAside(true)
   }
 
   const selectedDateKey = formatDateKey(date)
@@ -570,25 +577,40 @@ export default function App(){
     addTodoForCategory(catId, label)
   }
 
+  // Bridge: open right panel from child pages (e.g., GuidedJourneyDemo)
+  useEffect(() => {
+    const handler = (e) => {
+      const t = e.detail?.type || 'todo'
+      openSidePanel(t)
+    }
+    window.addEventListener('open-right-panel', handler)
+    return () => window.removeEventListener('open-right-panel', handler)
+  }, [])
+  // right sidebar visibility handled via isRightAllowed/isRightOpen
+
+  const isRightAllowed = (activeView === 'home') || (rightPanel.type !== 'todo')
+  const isRightOpen = showRightAside && isRightAllowed
+
   return (
-    <div className="container" style={showRightAside ? undefined : { gridTemplateColumns: '2fr 8fr' }}>
-      {/* 상단 우측 고정 토글 버튼 */}
-      <button
-        className="btn"
-        onClick={()=>setShowRightAside(v=>!v)}
-        style={{position:'fixed', top:12, right:12, zIndex:1000}}
-        aria-label="오늘의 투두 토글"
-      >
-        오늘의 투두 {showRightAside ? (<ChevronRight size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) : (<ChevronLeft size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) }
-      </button>
+    <div className="container" style={{ gridTemplateColumns: isRightOpen ? '2fr 7fr 3fr' : '2fr 10fr 0fr', transition: 'grid-template-columns 200ms ease' }}>
+      {/* 상단 우측 고정 토글 버튼: 홈/캘린더에서만 노출 */}
+      {activeView === 'home' && (
+        <button
+          className="btn"
+          onClick={()=>setShowRightAside(v=>!v)}
+          style={{position:'fixed', top:12, right:12, zIndex:1000}}
+          aria-label="오늘의 투두 토글"
+        >
+          오늘의 투두 {showRightAside ? (<ChevronRight size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) : (<ChevronLeft size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) }
+        </button>
+      )}
       {/* Left Sidebar */}
       <aside className="sidebar">
         <h2 style={{fontSize: '18px', fontWeight: 700, marginBottom: 12}}>Mswitch</h2>
         <nav className="nav">
           <p className={activeView==='home' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('home')}>홈/캘린더</p>
-          <p className={activeView==='coach' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('coach')}>AI 진단</p>
-          <p className={activeView==='files' ? 'bold nav-link active' : 'nav-link'} onClick={()=>{ setActiveView('files') }}>LLM</p>
           <p className={activeView==='insight' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('insight')}>인사이트</p>
+          <p className={activeView==='journey' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('journey')}>가이드 여정</p>
         </nav>
         <div style={{marginTop: 24}}>
           <Card>
@@ -616,7 +638,7 @@ export default function App(){
       {/* Main */}
       <main className="main">
         {activeView === 'home' ? (
-          <>
+          <div style={{paddingRight:16}}>
             <div className="row mb-4">
               <h1 className="title"><CalendarDays size={18}/> 2025.07</h1>
               <div>
@@ -797,9 +819,9 @@ export default function App(){
                 <Sparkles size={20} />
               )}
             </button>
-          </>
+          </div>
         ) : activeView === 'insight' ? (
-          <>
+          <div style={{paddingRight:16}}>
             <div className="row mb-4">
               <h1 className="title">카테고리별 진도관리 대시보드</h1>
             </div>
@@ -937,10 +959,14 @@ export default function App(){
                 </div>
               </div>
             )}
-          </>
+          </div>
         ) : activeView === 'files' ? (
           <div style={{padding: 8}}>
             <MultiDomainCoachHub />
+          </div>
+        ) : activeView === 'journey' ? (
+          <div style={{padding: 8}}>
+            <GuidedJourneyDemo onOpenSidePanel={openSidePanel} />
           </div>
         ) : (
           <div style={{padding: 8}}>
@@ -949,9 +975,16 @@ export default function App(){
         )}
       </main>
 
-      {/* Right Aside */}
-      {showRightAside && (
-      <aside className="aside">
+      {/* Right Aside: 항상 렌더링 (열림 시 360px, 닫힘 시 0px) */}
+      <aside className="aside" style={{ padding: isRightOpen ? 16 : 0, overflow: 'hidden', transition: 'padding 200ms ease' }}>
+        {isRightOpen && (
+          <div style={{display:'flex',justifyContent:'flex-end'}} className="mb-3">
+            <button className="btn btn-xs" onClick={()=>setShowRightAside(false)}>접기</button>
+          </div>
+        )}
+        {isRightAllowed ? (
+        rightPanel.type === 'todo' ? (
+        <>
         <h2 style={{fontSize: '18px', fontWeight: 700}} className="mb-3">20250701 TODOLIST</h2>
         <Card className="mb-3">
           <CardHeader>
@@ -1052,8 +1085,74 @@ export default function App(){
             )}
           </CardContent>
         </Card>
+        </>
+        ) : (
+        <>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}} className="mb-3">
+            <h2 style={{fontSize: '18px', fontWeight: 700}}>
+              {
+              rightPanel.type === 'pdf' ? 'PDF' :
+              rightPanel.type === 'report' ? '리포트' :
+              rightPanel.type === 'wrong-note' ? '오답노트' :
+              rightPanel.type === 'quiz-set' ? '보완문제' : '내보내기'
+              }
+            </h2>
+          </div>
+          <Card className="mb-3">
+            <CardHeader>
+              <CardTitle>미리보기</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rightPanel.type === 'pdf' && (
+                <div className="small">
+                  <p><b>제목</b>: 2025-08-모의고사 진단 리포트</p>
+                  <p><b>요약</b>: 점수 78, 정답률 {computeListCompletion(workoutList)}% · 취약개념 5개 · 권장코스 3개</p>
+                  <ul className="list" style={{marginTop:8}}>
+                    <li className="item">1. 분수 나눗셈 원리 복습 – 25분</li>
+                    <li className="item">2. 속력/거리/시간 단위 변환 – 20분</li>
+                    <li className="item">3. 확률 기초 재훈련 – 30분</li>
+                  </ul>
+                </div>
+              )}
+              {rightPanel.type === 'report' && (
+                <div className="small">
+                  <p><b>리포트</b>: 진단 요약과 학습 계획</p>
+                  <ul className="list" style={{marginTop:8}}>
+                    <li className="item">요약 점수/정답률/취약개념</li>
+                    <li className="item">주간 학습 계획(3모듈)</li>
+                    <li className="item">추천 자료 및 링크</li>
+                  </ul>
+                </div>
+              )}
+              {rightPanel.type === 'wrong-note' && (
+                <div className="small">
+                  <p><b>오답노트</b>: 틀린 문제 정리와 원인 분석</p>
+                  <ul className="list" style={{marginTop:8}}>
+                    <li className="item">5번: 분수 나눗셈 – 역수 적용 누락</li>
+                    <li className="item">8번: 속력 공식 – 단위 변환 오류</li>
+                    <li className="item">11번: 확률 – 표본공간 설정 미흡</li>
+                  </ul>
+                </div>
+              )}
+              {rightPanel.type === 'quiz-set' && (
+                <div className="small">
+                  <p><b>보완문제 세트</b>: 취약 개념 기반 10문항</p>
+                  <ul className="list" style={{marginTop:8}}>
+                    <li className="item">Q1. 3/5 ÷ 2/3 = ?</li>
+                    <li className="item">Q4. 54km/h는 m/s로?</li>
+                    <li className="item">Q7. 주사위 2개 합이 9일 확률?</li>
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <div style={{display:'flex',gap:8}}>
+            <button className="btn btn-dark">다운로드</button>
+            <button className="btn" onClick={()=>setRightPanel({ type: 'todo', payload: null })}>닫기</button>
+          </div>
+        </>
+        ) ) : null}
       </aside>
-      )}
     </div>
   )
 }

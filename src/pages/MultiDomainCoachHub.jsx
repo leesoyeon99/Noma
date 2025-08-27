@@ -445,7 +445,7 @@ export default function MultiDomainCoachHub() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
-      <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 bg-white rounded-2xl shadow p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2"><FolderOpen className="w-5 h-5"/><h2 className="text-lg font-semibold">분야 리스트</h2></div>

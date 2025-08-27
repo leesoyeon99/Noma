@@ -184,7 +184,7 @@ export default function AIWrongConceptCoachPage() {
         </div>
       </div>
 
-      <div className="mx-auto" style={{display:'grid', gridTemplateColumns:'1fr', gap:12}}>
+      <div className="w-full flex-1" style={{display:'grid', gridTemplateColumns:'1fr', gap:12}}>
         {/* 업로드 & 노트 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -368,7 +368,7 @@ export default function AIWrongConceptCoachPage() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
-              className="mb-6 w-[560px] max-w-[92vw] bg-white rounded-2xl shadow p-4"
+              className="mb-6 w-full bg-white rounded-2xl shadow p-4"
             >
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin" />

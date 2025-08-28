@@ -567,8 +567,8 @@ export default function GuidedJourneyDemo(){
                     {domains.map(d => (
                       <li key={d.id} className="flex items-center justify-between border rounded-md px-3 py-2 hover:bg-gray-50">
                         <button className="flex-1 text-left" onClick={()=> setMessagesInChatFromDomain(d)}>
-                          <div className="font-medium">{d.name}</div>
-                          <div className="text-[11px] text-gray-500">{d.tag}</div>
+                          <div className="font-medium">{d.tag}</div>
+                          <div className="text-[11px] text-gray-500">{d.name}</div>
                         </button>
                         <button className="ml-2 text-gray-500 hover:text-rose-600" title="삭제" onClick={()=> setDomains(prev=> prev.filter(x=>x.id!==d.id))}>
                           <Trash2 size={14}/>
@@ -827,7 +827,7 @@ function ChatArea({ Button, warmSuggestion, onCreateFile, onCompleteMicroCourse,
       </div>
       <div className="flex-1 overflow-y-auto space-y-3">
         {messages.map((m,i)=> (
-          <div key={i} className={`${m.role==='assistant'?'bg-purple-100 ml-auto':'bg-gray-100'} p-2 rounded-lg max-w-md`}>{m.text}</div>
+          <div key={i} className={`${m.role==='assistant'?'bg-purple-100':'bg-blue-100 ml-auto'} p-2 rounded-lg max-w-md`}>{m.text}</div>
         ))}
       </div>
       <div className="flex mt-4 gap-2">

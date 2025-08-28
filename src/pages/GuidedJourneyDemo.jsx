@@ -169,9 +169,9 @@ export default function GuidedJourneyDemo(){
   const [showDiagnosisDetail, setShowDiagnosisDetail] = useState(false)
   const [examOptions, setExamOptions] = useState([])
   const [domains, setDomains] = useState([
-            { id: '토익 RC/LC', name: '토익 RC/LC', tag: 'study', progress: 0 },
-            { id: '영어 회화', name: '영어 회화', tag: 'study', progress: 0 },
-            { id: '근력/유산소', name: '근력/유산소', tag: '근력/유산소', progress: 0 },
+            { id: '토익 RC/LC', name: '실전 어휘 체크', tag: '토익 RC/LC', progress: 0 },
+            { id: '영어 회화', name: '일상 회화 연습', tag: '영어 회화', progress: 0 },
+            { id: '근력/유산소', name: '1박 2일 크로스핏 캠프', tag: '근력/유산소', progress: 0 },
   ])
 
   const progress = useMemo(()=> {
@@ -300,7 +300,7 @@ export default function GuidedJourneyDemo(){
         <TabsContent value="diagnosis" className="p-0">
           <div className="w-full mb-4">
             <img 
-              src="/ai-coaching-infographic.svg" 
+              src="./ai-coaching-infographic.svg" 
               alt="AI 코칭 프로세스" 
               style={{
                 width: '100%',
@@ -530,7 +530,7 @@ export default function GuidedJourneyDemo(){
           {/* AI 코치 인포그래픽 */}
           <div className="w-full mb-4">
             <img 
-              src="/ai-llm-chatbot-infographic.svg" 
+              src="./ai-llm-chatbot-infographic.svg" 
               alt="AI 코치" 
               style={{
                 width: '100%',
@@ -555,9 +555,10 @@ export default function GuidedJourneyDemo(){
                   <CardTitle className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-2"><Folder size={14}/> 세션</span>
                     <Button variant="outline" size="sm" onClick={()=>{
-                      const name = prompt('세션 이름을 입력하세요 (예: 토익 RC/LC)')
+                      const tag = prompt('카테고리를 선택하세요 (근력/유산소, 토익 RC/LC, 영어 회화, study)', '근력/유산소')
+                      if (!tag) return
+                      const name = prompt('Todo 항목을 입력하세요 (예: 실전 어휘 체크)', '새로운 Todo')
                       if (!name) return
-                      const tag = prompt('태그를 입력하세요 (study/workout 등)', 'study') || 'study'
                       setDomains(prev => [...prev, { id: `dom-${Date.now()}`, name, tag, progress: 0 }])
                     }}>추가</Button>
                   </CardTitle>
@@ -567,8 +568,8 @@ export default function GuidedJourneyDemo(){
                     {domains.map(d => (
                       <li key={d.id} className="flex items-center justify-between border rounded-md px-3 py-2 hover:bg-gray-50">
                         <button className="flex-1 text-left" onClick={()=> setMessagesInChatFromDomain(d)}>
-                          <div className="font-medium">{d.tag}</div>
-                          <div className="text-[11px] text-gray-500">{d.name}</div>
+                          <div className="font-medium">{d.name}</div>
+                          <div className="text-[11px] text-gray-500">{d.tag}</div>
                         </button>
                         <button className="ml-2 text-gray-500 hover:text-rose-600" title="삭제" onClick={()=> setDomains(prev=> prev.filter(x=>x.id!==d.id))}>
                           <Trash2 size={14}/>

@@ -113,7 +113,9 @@ export default function App(){
   const [panelOpen, setPanelOpen] = useState(false)
   const [workoutTodosByDate, setWorkoutTodosByDate] = useState({})
   const [toeicTodosByDate, setToeicTodosByDate] = useState({})
-  const [showAddInput, setShowAddInput] = useState({ workout:false, toeic:false })
+  const [englishConversationTodosByDate, setEnglishConversationTodosByDate] = useState({})
+  const [studyTodosByDate, setStudyTodosByDate] = useState({})
+  const [showAddInput, setShowAddInput] = useState({ workout:false, toeic:false, englishConversation:false, study:false })
   const [newTodoText, setNewTodoText] = useState('')
   const [extraCategories, setExtraCategories] = useState([])
   const [extraTodosByDate, setExtraTodosByDate] = useState({}) // { [catId]: { [dateKey]: Todo[] } }
@@ -155,10 +157,16 @@ export default function App(){
       }
     }
     Object.entries(workoutTodosByDate).forEach(([dk, list]) => {
-      (list||[]).forEach(it => pushEvent('workout', dk, it))
+      (list||[]).forEach(it => pushEvent('근력/유산소', dk, it))
     })
     Object.entries(toeicTodosByDate).forEach(([dk, list]) => {
-      (list||[]).forEach(it => pushEvent('toeic', dk, it))
+      (list||[]).forEach(it => pushEvent('토익 RC/LC', dk, it))
+    })
+    Object.entries(englishConversationTodosByDate).forEach(([dk, list]) => {
+      (list||[]).forEach(it => pushEvent('영어 회화', dk, it))
+    })
+    Object.entries(studyTodosByDate).forEach(([dk, list]) => {
+      (list||[]).forEach(it => pushEvent('study', dk, it))
     })
     Object.entries(extraTodosByDate).forEach(([catId, byDate]) => {
       Object.entries(byDate||{}).forEach(([dk, list]) => {
@@ -166,7 +174,7 @@ export default function App(){
       })
     })
     return events
-  }, [workoutTodosByDate, toeicTodosByDate, extraTodosByDate])
+  }, [workoutTodosByDate, toeicTodosByDate, englishConversationTodosByDate, studyTodosByDate, extraTodosByDate])
 
   const kpis = useMemo(() => {
     const total = RAW.length || 1
@@ -198,6 +206,14 @@ export default function App(){
   const [toeicTodos, setToeicTodos] = useState([
     { id: 't1', label: '실전 어휘 체크', done: false },
     { id: 't2', label: '오답노트 복습', done: false },
+  ])
+  const [englishConversationTodos, setEnglishConversationTodos] = useState([
+    { id: 'ec1', label: '일상 회화 연습', done: false },
+    { id: 'ec2', label: '비즈니스 영어', done: false },
+  ])
+  const [studyTodos, setStudyTodos] = useState([
+    { id: 's1', label: '수학 공부', done: false },
+    { id: 's2', label: '과학 실험', done: false },
   ])
 
   const toggleItem = (id, list, setter) => {
@@ -255,6 +271,14 @@ export default function App(){
     return Math.round((done / list.length) * 100)
   }
 
+  const computeTimeBasedProgress = (list) => {
+    if (!list || list.length === 0) return 0
+    const totalTime = list.reduce((sum, item) => sum + (item.time || 0), 0)
+    const completedTime = list.filter(item => item.done).reduce((sum, item) => sum + (item.time || 0), 0)
+    if (totalTime === 0) return 0
+    return Math.round((completedTime / totalTime) * 100)
+  }
+
   const sendNomaMessage = () => {
     const text = nomaInput.trim()
     if (!text) return
@@ -270,6 +294,8 @@ export default function App(){
   const selectedDateKey = formatDateKey(date)
   const workoutList = workoutTodosByDate[selectedDateKey] ?? []
   const toeicList = toeicTodosByDate[selectedDateKey] ?? []
+  const englishConversationList = englishConversationTodosByDate[selectedDateKey] ?? []
+  const studyList = studyTodosByDate[selectedDateKey] ?? []
 
   useEffect(()=>{
     const key = selectedDateKey
@@ -281,35 +307,70 @@ export default function App(){
       if (prev[key]) return prev
       return { ...prev, [key]: DEFAULT_TOEIC.map(x=>({ ...x, id: `t-${key}-${x.id}` })) }
     })
+    setEnglishConversationTodosByDate(prev => {
+      if (prev[key]) return prev
+      return { ...prev, [key]: englishConversationTodos.map(x=>({ ...x, id: `ec-${key}-${x.id}` })) }
+    })
+    setStudyTodosByDate(prev => {
+      if (prev[key]) return prev
+      return { ...prev, [key]: studyTodos.map(x=>({ ...x, id: `s-${key}-${x.id}` })) }
+    })
   }, [selectedDateKey])
 
   const addTodo = (category) => {
     const text = newTodoText.trim()
     if (!text) return
-    const newItem = { id: `${category}-${Date.now()}`, label: text, done: false }
-    if (category === 'workout') {
+    const timeInput = document.getElementById(`${category}-time-input`)
+    const timeValue = timeInput ? parseInt(timeInput.value) || 0 : 0
+    const newItem = { 
+      id: `${category}-${Date.now()}`, 
+      label: text, 
+      time: timeValue, // 분 단위로 저장
+      done: false 
+    }
+    if (category === '근력/유산소') {
       setWorkoutTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: [...(prev[selectedDateKey] ?? []), newItem]
       }))
-    } else {
+    } else if (category === '토익 RC/LC') {
       setToeicTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: [...(prev[selectedDateKey] ?? []), newItem]
+      }))
+    } else if (category === '영어 회화') {
+      setEnglishConversationTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: [...(prev[selectedDateKey] ?? []), newItem]
+      }))
+    } else if (category === 'study') {
+      setStudyTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: [...(prev[selectedDateKey] ?? []), newItem]
       }))
     }
     setNewTodoText('')
-    setShowAddInput({ workout:false, toeic:false })
+    setShowAddInput({ workout:false, toeic:false, englishConversation:false, study:false })
   }
 
   const deleteTodo = (category, id) => {
-    if (category === 'workout') {
+    if (category === '근력/유산소') {
       setWorkoutTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: (prev[selectedDateKey] ?? []).filter(it=>it.id!==id)
       }))
-    } else {
+    } else if (category === '토익 RC/LC') {
       setToeicTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: (prev[selectedDateKey] ?? []).filter(it=>it.id!==id)
+      }))
+    } else if (category === '영어 회화') {
+      setEnglishConversationTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: (prev[selectedDateKey] ?? []).filter(it=>it.id!==id)
+      }))
+    } else if (category === 'study') {
+      setStudyTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: (prev[selectedDateKey] ?? []).filter(it=>it.id!==id)
       }))
@@ -319,7 +380,7 @@ export default function App(){
   }
 
   const toggleTodo = (category, id) => {
-    if (category === 'workout') {
+    if (category === '근력/유산소') {
       setWorkoutTodosByDate(prev => {
         const prevList = prev[selectedDateKey] ?? []
         const before = prevList.find(it => it.id === id)
@@ -327,7 +388,7 @@ export default function App(){
         const after = updatedList.find(it => it.id === id)
         if (before && after) {
           if (!before.done && after.done) {
-            addTimelineEntry({ category: '운동', label: after.label, todoId: id, dateKey: selectedDateKey })
+            addTimelineEntry({ category: '근력/유산소', label: after.label, todoId: id, dateKey: selectedDateKey })
           }
           if (before.done && !after.done) {
             setTimeline(prev => prev.filter(t => t.todoId !== id || t.dateKey !== selectedDateKey))
@@ -335,7 +396,7 @@ export default function App(){
         }
         return { ...prev, [selectedDateKey]: updatedList }
       })
-    } else {
+    } else if (category === '토익 RC/LC') {
       setToeicTodosByDate(prev => {
         const prevList = prev[selectedDateKey] ?? []
         const before = prevList.find(it => it.id === id)
@@ -343,7 +404,39 @@ export default function App(){
         const after = updatedList.find(it => it.id === id)
         if (before && after) {
           if (!before.done && after.done) {
-            addTimelineEntry({ category: '토익', label: after.label, todoId: id, dateKey: selectedDateKey })
+            addTimelineEntry({ category: '토익 RC/LC', label: after.label, todoId: id, dateKey: selectedDateKey })
+          }
+          if (before.done && !after.done) {
+            setTimeline(prev => prev.filter(t => t.todoId !== id || t.dateKey !== selectedDateKey))
+          }
+        }
+        return { ...prev, [selectedDateKey]: updatedList }
+      })
+    } else if (category === '영어 회화') {
+      setEnglishConversationTodosByDate(prev => {
+        const prevList = prev[selectedDateKey] ?? []
+        const before = prevList.find(it => it.id === id)
+        const updatedList = prevList.map(it=> it.id===id?{...it,done:!it.done}:it)
+        const after = updatedList.find(it => it.id === id)
+        if (before && after) {
+          if (!before.done && after.done) {
+            addTimelineEntry({ category: '영어 회화', label: after.label, todoId: id, dateKey: selectedDateKey })
+          }
+          if (before.done && !after.done) {
+            setTimeline(prev => prev.filter(t => t.todoId !== id || t.dateKey !== selectedDateKey))
+          }
+        }
+        return { ...prev, [selectedDateKey]: updatedList }
+      })
+    } else if (category === 'study') {
+      setStudyTodosByDate(prev => {
+        const prevList = prev[selectedDateKey] ?? []
+        const before = prevList.find(it => it.id === id)
+        const updatedList = prevList.map(it=> it.id===id?{...it,done:!it.done}:it)
+        const after = updatedList.find(it => it.id === id)
+        if (before && after) {
+          if (!before.done && after.done) {
+            addTimelineEntry({ category: 'study', label: after.label, todoId: id, dateKey: selectedDateKey })
           }
           if (before.done && !after.done) {
             setTimeline(prev => prev.filter(t => t.todoId !== id || t.dateKey !== selectedDateKey))
@@ -354,13 +447,15 @@ export default function App(){
     }
   }
 
-  // 간단 차트용 데이터
+  // 간단 차트용 데이터 (시간 기준)
   const categorySeries = [
-    { category: '운동', progress: computeListCompletion(workoutList), target: 100 },
-    { category: '토익', progress: computeListCompletion(toeicList), target: 100 },
+    { category: '근력/유산소', progress: computeTimeBasedProgress(workoutList), target: 100 },
+    { category: '토익 RC/LC', progress: computeTimeBasedProgress(toeicList), target: 100 },
+    { category: '영어 회화', progress: computeTimeBasedProgress(englishConversationList), target: 100 },
+    { category: 'study', progress: computeTimeBasedProgress(studyList), target: 100 },
     ...extraCategories.map(cat => ({
       category: cat.name,
-      progress: computeListCompletion((extraTodosByDate[cat.id]?.[selectedDateKey]) ?? []),
+      progress: computeTimeBasedProgress((extraTodosByDate[cat.id]?.[selectedDateKey]) ?? []),
       target: 100,
     })),
   ]
@@ -438,7 +533,9 @@ export default function App(){
   const addExtraTodo = (catId) => {
     const text = (newTodoTextExtra[catId] || '').trim()
     if (!text) return
-    const newItem = { id: `${catId}-${Date.now()}`, label: text, done: false }
+    const timeInput = document.getElementById(`extra-${catId}-time-input`)
+    const timeValue = timeInput ? parseInt(timeInput.value) || 0 : 0
+    const newItem = { id: `${catId}-${Date.now()}`, label: text, time: timeValue, done: false }
     setExtraTodosByDate(prev => ({
       ...prev,
       [catId]: {
@@ -509,15 +606,19 @@ export default function App(){
   }
 
   const sumDoneForCategory = (catId, dateKeys) => {
-    if (catId === 'workout') return countDoneInMap(workoutTodosByDate, dateKeys)
-    if (catId === 'toeic') return countDoneInMap(toeicTodosByDate, dateKeys)
+    if (catId === '근력/유산소') return countDoneInMap(workoutTodosByDate, dateKeys)
+    if (catId === '토익 RC/LC') return countDoneInMap(toeicTodosByDate, dateKeys)
+    if (catId === '영어 회화') return countDoneInMap(englishConversationTodosByDate, dateKeys)
+    if (catId === 'study') return countDoneInMap(studyTodosByDate, dateKeys)
     const catMap = extraTodosByDate[catId] || {}
     return dateKeys.reduce((acc, k) => acc + ((catMap[k] || []).filter(it => it.done).length), 0)
   }
 
   const getCategoryLabel = (catId) => {
-    if (catId === 'workout') return '운동'
-    if (catId === 'toeic') return '토익'
+    if (catId === '근력/유산소') return '근력/유산소'
+    if (catId === '토익 RC/LC') return '토익 RC/LC'
+    if (catId === '영어 회화') return '영어 회화'
+    if (catId === 'study') return 'study'
     const cat = extraCategories.find(c => c.id === catId)
     return cat ? cat.name : catId
   }
@@ -525,7 +626,7 @@ export default function App(){
   const computeWeeklyDeltaPoints = () => {
     const thisWeekKeys = getWeekDateKeys(date, 0)
     const lastWeekKeys = getWeekDateKeys(date, -1)
-    const catIds = ['workout', 'toeic', ...extraCategories.map(c => c.id)]
+    const catIds = ['근력/유산소', '토익 RC/LC', '영어 회화', 'study', ...extraCategories.map(c => c.id)]
     return catIds.map(id => ({ label: getCategoryLabel(id), value: sumDoneForCategory(id, thisWeekKeys) - sumDoneForCategory(id, lastWeekKeys) }))
   }
 
@@ -541,21 +642,33 @@ export default function App(){
 
   const resolveCategoryIdForSuggestion = (s) => {
     const cat = s.category || ''
-    if (cat.includes('유산소') || cat.includes('운동')) return 'workout'
-    if (cat.includes('토익')) return 'toeic'
+    if (cat.includes('유산소') || cat.includes('운동')) return '근력/유산소'
+    if (cat.includes('토익')) return '토익 RC/LC'
+    if (cat.includes('회화') || cat.includes('영어')) return '영어 회화'
+    if (cat.includes('공부') || cat.includes('학습')) return 'study'
     // 나머지는 추가 카테고리로 관리
     return ensureExtraCategoryByName(cat)
   }
 
   const addTodoForCategory = (catId, label) => {
-    const item = { id: `${catId}-${Date.now()}`, label, done: false }
-    if (catId === 'workout') {
+    const item = { id: `${catId}-${Date.now()}`, label, time: 0, done: false }
+    if (catId === '근력/유산소') {
       setWorkoutTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: [...(prev[selectedDateKey] || []), item]
       }))
-    } else if (catId === 'toeic') {
+    } else if (catId === '토익 RC/LC') {
       setToeicTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: [...(prev[selectedDateKey] || []), item]
+      }))
+    } else if (catId === '영어 회화') {
+      setEnglishConversationTodosByDate(prev => ({
+        ...prev,
+        [selectedDateKey]: [...(prev[selectedDateKey] || []), item]
+      }))
+    } else if (catId === 'study') {
+      setStudyTodosByDate(prev => ({
         ...prev,
         [selectedDateKey]: [...(prev[selectedDateKey] || []), item]
       }))
@@ -592,26 +705,23 @@ export default function App(){
   const isRightOpen = showRightAside && isRightAllowed
 
   return (
-    <div className="container" style={{ gridTemplateColumns: isRightOpen ? '2fr 7fr 3fr' : '2fr 10fr 0fr', transition: 'grid-template-columns 200ms ease' }}>
-      {/* 상단 우측 고정 토글 버튼: 홈/캘린더에서만 노출 */}
-      {activeView === 'home' && (
-        <button
-          className="btn"
-          onClick={()=>setShowRightAside(v=>!v)}
-          style={{position:'fixed', top:12, right:12, zIndex:1000}}
-          aria-label="오늘의 투두 토글"
-        >
-          오늘의 투두 {showRightAside ? (<ChevronRight size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) : (<ChevronLeft size={14} style={{verticalAlign:'middle', marginLeft:6}}/>) }
-        </button>
-      )}
+    <div className="container" style={{ gridTemplateColumns: isRightOpen ? '256px 1fr 360px' : '256px 1fr 0px', transition: 'grid-template-columns 200ms ease' }}>
+
       {/* Left Sidebar */}
       <aside className="sidebar">
-        <h2 style={{fontSize: '18px', fontWeight: 700, marginBottom: 12}}>Mswitch</h2>
-        <nav className="nav">
-          <p className={activeView==='home' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('home')}>홈/캘린더</p>
-          <p className={activeView==='insight' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('insight')}>인사이트</p>
-          <p className={activeView==='journey' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('journey')}>가이드 여정</p>
-        </nav>
+                            <h2 style={{fontSize: '18px', fontWeight: 700, marginBottom: 12}}>
+                      <span style={{display: 'inline-block', width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle'}}>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                      </span>
+                      noma
+                    </h2>
+                            <nav className="nav">
+                      <p className={activeView==='home' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('home')}>Home/Calendar</p>
+                      <p className={activeView==='journey' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('journey')}>NOMA lab</p>
+                      <p className={activeView==='insight' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('insight')}>Insights</p>
+                    </nav>
         <div style={{marginTop: 24}}>
           <Card>
             <CardHeader>
@@ -641,13 +751,32 @@ export default function App(){
           <div style={{paddingRight:16}}>
             <div className="row mb-4">
               <h1 className="title"><CalendarDays size={18}/> 2025.07</h1>
-              <div>
-                <Tabs value={calendarType} onValueChange={setCalendarType}>
-                  <TabsList>
-                    <TabsTrigger value="calendar" onValueChange={setCalendarType}>달력</TabsTrigger>
-                    <TabsTrigger value="heatmap" onValueChange={setCalendarType}>히트맵 달력</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <button
+                  className={`btn ${calendarType === 'calendar' ? 'btn-dark' : ''}`}
+                  onClick={() => setCalendarType('calendar')}
+                  style={{minWidth: '80px', height: '36px', fontSize: '14px'}}
+                >
+                  달력
+                </button>
+                <button
+                  className={`btn ${calendarType === 'heatmap' ? 'btn-dark' : ''}`}
+                  onClick={() => setCalendarType('heatmap')}
+                  style={{minWidth: '100px', height: '36px', fontSize: '14px'}}
+                >
+                  히트맵 달력
+                </button>
+                <button
+                  className={`btn ${showRightAside ? 'btn-dark' : ''}`}
+                  onClick={() => setShowRightAside(v => !v)}
+                  style={{minWidth: '120px', height: '36px', fontSize: '14px'}}
+                  aria-label="오늘의 투두 토글"
+                >
+                  <span style={{display: 'flex', alignItems: 'center'}}>
+                    오늘의 투두
+                    {showRightAside ? <ChevronRight size={16} style={{marginLeft: '4px'}}/> : <ChevronLeft size={16} style={{marginLeft: '4px'}}/>}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -832,7 +961,7 @@ export default function App(){
                 <div className="kpi-value">{kpis.avgProgress}% <span className="kpi-sub">/ 목표 {kpis.avgTarget}%</span></div>
               </div>
               <div className="kpi">
-                <div className="kpi-title" style={{display:'flex',alignItems:'center',gap:6}}><AlertTriangle size={14}/> 리스크 카테고리</div>
+                <div className="kpi-title" style={{display:'flex',alignItems:'center',gap:6}}><AlertTriangle size={14}/> 실적 부진 카테고리</div>
                 <div className="kpi-value">{kpis.riskCnt}</div>
               </div>
               <div className="kpi">
@@ -874,25 +1003,37 @@ export default function App(){
                 <CardContent>
                   <div className="table-like">
                     <div className="t-head">
-                      <div>카테고리</div><div>목표</div><div>진도</div><div>주간Δ</div><div>상태</div>
+                      <div>카테고리</div><div>목표</div><div>진도(시간)</div><div>완료시간</div><div>상태</div>
                     </div>
-                    {RAW.map(r=>{
-                      const risk = r.progress < r.target - 10
-                      const onTrack = r.progress >= r.target
+                    {[
+                      { category: '운동', list: workoutList },
+                      { category: '토익', list: toeicList },
+                      ...extraCategories.map(cat => ({
+                        category: cat.name,
+                        list: getExtraList(cat.id)
+                      }))
+                    ].map(r => {
+                      const totalTime = r.list.reduce((sum, item) => sum + (item.time || 0), 0)
+                      const completedTime = r.list.filter(item => item.done).reduce((sum, item) => sum + (item.time || 0), 0)
+                      const progress = totalTime > 0 ? Math.round((completedTime / totalTime) * 100) : 0
+                      const risk = progress < 50
+                      const onTrack = progress >= 80
                       return (
                         <div key={r.category} className="t-row">
                           <div className="t-cell name">{r.category}</div>
-                          <div className="t-cell">{r.target}%</div>
+                          <div className="t-cell">100%</div>
                           <div className="t-cell">
-                            <div className="progress-track"><div className="progress-fill" style={{width: r.progress + '%'}} /></div>
-                            <span className="small" style={{marginLeft:8}}>{r.progress}%</span>
+                            <div className="progress-track"><div className="progress-fill" style={{width: progress + '%'}} /></div>
+                            <span className="small" style={{marginLeft:8}}>{progress}%</span>
                           </div>
-                          <div className="t-cell" style={{color: r.delta>=0?'#16a34a':'#dc2626'}}>{r.delta>=0?`+${r.delta}`:r.delta}p</div>
+                          <div className="t-cell">
+                            <span className="small">{completedTime}분 / {totalTime}분</span>
+                          </div>
                           <div className="t-cell">
                             {onTrack ? (
                               <span className="badge badge-green" title="목표 달성">목표 달성</span>
                             ) : risk ? (
-                              <span className="badge badge-rose" title="목표치 대비 10%p 이상 미달">미달 위험</span>
+                              <span className="badge badge-rose" title="목표치 대비 50%p 이상 미달">미달 위험</span>
                             ) : (
                               <span className="badge badge-amber" title="목표 대비 약간 부족 (추가 보강 필요)">보강 필요</span>
                             )}
@@ -909,17 +1050,48 @@ export default function App(){
                 </CardHeader>
                 <CardContent>
                   <ul className="insight-list">
-                    <li><b>가장 낮은 카테고리</b> "오답노트"(진도 39%)<br/>→ 단기 테스크(10~15분)를 정해 꾸준히 기록·정리하는 습관을 들이세요. 단순히 틀린 문제를 모으는 데서 그치지 말고, 왜 틀렸는지 원인을 분석하고 보완 학습으로 연결하는 것이 중요합니다.</li>
-                    <li><b>가장 개선된 카테고리</b> "유산소"(주간 변화 8p)<br/>→ 현재 루틴이 효과적이므로, 강도·시간을 조금씩 늘려 지속적인 성장을 유도하세요. 단, 과부하가 오지 않도록 회복일(휴식 or 저강도 활동)을 포함하는 주간 계획을 세우는 것이 좋습니다.</li>
-                    <li><b>목표 미달 카테고리 3개</b>: 유산소, 상체운동, 하체운동<br/>→ 전반적으로 균형이 부족하므로 보강 루틴을 배치하세요.</li>
-                    <li>
-                      권장 보강 루틴
-                      <ul>
-                        <li>유산소: 루틴 다양화(예: 달리기 + 자전거 교차)</li>
-                        <li>상체운동: 복합 운동(푸시업·풀업 등)으로 근지구력 강화</li>
-                        <li>하체운동: 스쿼트·런지 중심으로 주 2~3회 규칙적 수행</li>
-                      </ul>
-                    </li>
+                    {(() => {
+                      const categories = [
+                        { name: '운동', list: workoutList },
+                        { name: '토익', list: toeicList },
+                        ...extraCategories.map(cat => ({
+                          name: cat.name,
+                          list: getExtraList(cat.id)
+                        }))
+                      ]
+                      
+                      const timeBasedCategories = categories.map(cat => {
+                        const totalTime = cat.list.reduce((sum, item) => sum + (item.time || 0), 0)
+                        const completedTime = cat.list.filter(item => item.done).reduce((sum, item) => sum + (item.time || 0), 0)
+                        const progress = totalTime > 0 ? Math.round((completedTime / totalTime) * 100) : 0
+                        return { ...cat, totalTime, completedTime, progress }
+                      })
+                      
+                      const lowestCategory = timeBasedCategories.reduce((lowest, cat) => 
+                        cat.progress < lowest.progress ? cat : lowest
+                      )
+                      
+                      const totalCompletedTime = timeBasedCategories.reduce((sum, cat) => sum + cat.completedTime, 0)
+                      const totalPlannedTime = timeBasedCategories.reduce((sum, cat) => sum + cat.totalTime, 0)
+                      
+                      return (
+                        <>
+                          <li><b>시간 기준 진도율</b> {totalCompletedTime}분 / {totalPlannedTime}분 ({Math.round((totalCompletedTime / totalPlannedTime) * 100)}%)<br/>→ 계획된 시간 대비 실제 완료된 시간을 기준으로 진도를 측정합니다.</li>
+                          <li><b>가장 낮은 카테고리</b> "{lowestCategory.name}"(진도 {lowestCategory.progress}%)<br/>→ {lowestCategory.totalTime}분 중 {lowestCategory.completedTime}분 완료. 단기 테스크(10~15분)를 정해 꾸준히 수행하는 습관을 들이세요.</li>
+                          <li><b>시간 관리 팁</b><br/>→ 각 todo에 현실적인 시간을 설정하고, 완료 후 실제 소요 시간을 기록하여 더 정확한 계획 수립에 활용하세요.</li>
+                                                      <li>
+                              권장 보강 루틴
+                              <ul>
+                                <li>근력/유산소: 30분 단위로 분할하여 지속 가능한 루틴 구성</li>
+                                <li>토익 RC/LC: 20분 집중 학습 + 10분 복습으로 효율성 극대화</li>
+                                <li>영어 회화: 15분씩 하루 2-3회로 자연스러운 대화 연습</li>
+                                <li>study: 25분 집중 + 5분 휴식으로 효율적인 학습 진행</li>
+                              </ul>
+                            </li>
+                        </>
+                      )
+                    })()}
+
                   </ul>
                 </CardContent>
               </Card>
@@ -995,33 +1167,46 @@ export default function App(){
 
       {/* Right Aside: 항상 렌더링 (열림 시 360px, 닫힘 시 0px) */}
       <aside className="aside" style={{ padding: isRightOpen ? 16 : 0, overflow: 'hidden', transition: 'padding 200ms ease' }}>
-        {isRightOpen && (
-          <div style={{display:'flex',justifyContent:'flex-end'}} className="mb-3">
-            <button className="btn btn-xs" onClick={()=>setShowRightAside(false)}>접기</button>
-          </div>
-        )}
+
         {isRightAllowed ? (
         rightPanel.type === 'todo' ? (
         <>
-        <h2 style={{fontSize: '18px', fontWeight: 700}} className="mb-3">20250701 TODOLIST</h2>
-        <Card className="mb-3">
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}} className="mb-3">
+                      <h2 style={{fontSize: '18px', fontWeight: 700}}>오늘의 할 일</h2>
+                      <button className="btn btn-xs" onClick={()=>setShowAddCategory(s=>!s)}>카테고리 추가</button>
+                    </div>
+                    {showAddCategory && (
+                      <div style={{display:'flex', gap:8, marginBottom: 16}}>
+                        <input className="input" value={newCategoryName} onChange={e=>setNewCategoryName(e.target.value)} placeholder="카테고리명 입력" />
+                        <button className="btn btn-dark" onClick={addCategory}>추가</button>
+                      </div>
+                    )}
+        <Card className="mb-4">
           <CardHeader>
-            <CardTitle>운동 <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,workout:!s.workout})); setNewTodoText('')}}>+</button></CardTitle>
+            <CardTitle>근력/유산소 <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,workout:!s.workout})); setNewTodoText('')}}>+</button></CardTitle>
           </CardHeader>
           <CardContent>
             {showAddInput.workout && (
               <div style={{display:'flex', gap:8, marginBottom:8}}>
                 <input value={newTodoText} onChange={e=>setNewTodoText(e.target.value)} placeholder={`${date.toLocaleDateString()} 일정 입력`} className="input" />
-                <button className="btn btn-dark" onClick={()=>addTodo('workout')}>추가</button>
+                <input 
+                  id="workout-time-input"
+                  type="number" 
+                  min="0" 
+                  placeholder="분" 
+                  className="input" 
+                  style={{width: '80px'}}
+                />
+                <button className="btn btn-dark" onClick={()=>addTodo('근력/유산소')}>추가</button>
               </div>
             )}
             <ul className="list">
               {workoutList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('workout', it.id)} style={{justifyContent:'space-between'}}>
-                  <span>{it.label}</span>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('근력/유산소', it.id)} style={{justifyContent:'space-between'}}>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
-                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('workout', it.id)} onClick={e=>e.stopPropagation()} />
-                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('workout', it.id)}}>삭제</button>
+                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('근력/유산소', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('근력/유산소', it.id)}}>삭제</button>
                   </span>
                 </li>
               ))}
@@ -1030,28 +1215,104 @@ export default function App(){
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="mb-4">
           <CardHeader>
-            <CardTitle>토익 <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,toeic:!s.toeic})); setNewTodoText('')}}>+</button></CardTitle>
+            <CardTitle>토익 RC/LC <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,toeic:!s.toeic})); setNewTodoText('')}}>+</button></CardTitle>
           </CardHeader>
           <CardContent>
             {showAddInput.toeic && (
               <div style={{display:'flex', gap:8, marginBottom:8}}>
                 <input value={newTodoText} onChange={e=>setNewTodoText(e.target.value)} placeholder={`${date.toLocaleDateString()} 일정 입력`} className="input" />
-                <button className="btn btn-dark" onClick={()=>addTodo('toeic')}>추가</button>
+                <input 
+                  id="toeic-time-input"
+                  type="number" 
+                  min="0" 
+                  placeholder="분" 
+                  className="input" 
+                  style={{width: '80px'}}
+                />
+                <button className="btn btn-dark" onClick={()=>addTodo('토익 RC/LC')}>추가</button>
               </div>
             )}
             <ul className="list">
               {toeicList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('toeic', it.id)} style={{justifyContent:'space-between'}}>
-                  <span>{it.label}</span>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('토익 RC/LC', it.id)} style={{justifyContent:'space-between'}}>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
-                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('toeic', it.id)} onClick={e=>e.stopPropagation()} />
-                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('toeic', it.id)}}>삭제</button>
+                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('토익 RC/LC', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
                   </span>
                 </li>
               ))}
               {toeicList.length===0 && <li className="small" style={{color:'#64748b'}}>선택한 날짜에 일정이 없습니다.</li>}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>영어 회화 <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,englishConversation:!s.englishConversation})); setNewTodoText('')}}>+</button></CardTitle>
+          </CardHeader>
+          <CardContent>
+            {showAddInput.englishConversation && (
+              <div style={{display:'flex', gap:8, marginBottom:8}}>
+                <input value={newTodoText} onChange={e=>setNewTodoText(e.target.value)} placeholder={`${date.toLocaleDateString()} 일정 입력`} className="input" />
+                <input 
+                  id="englishConversation-time-input"
+                  type="number" 
+                  min="0" 
+                  placeholder="분" 
+                  className="input" 
+                  style={{width: '80px'}}
+                />
+                <button className="btn btn-dark" onClick={()=>addTodo('영어 회화')}>추가</button>
+              </div>
+            )}
+            <ul className="list">
+              {englishConversationList.map(it=> (
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('영어 회화', it.id)} style={{justifyContent:'space-between'}}>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>
+                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('영어 회화', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('영어 회화', it.id)}}>삭제</button>
+                  </span>
+                </li>
+              ))}
+              {englishConversationList.length===0 && <li className="small" style={{color:'#64748b'}}>선택한 날짜에 일정이 없습니다.</li>}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>study <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>{setShowAddInput(s=>({...s,study:!s.study})); setNewTodoText('')}}>+</button></CardTitle>
+          </CardHeader>
+          <CardContent>
+            {showAddInput.study && (
+              <div style={{display:'flex', gap:8, marginBottom:8}}>
+                <input value={newTodoText} onChange={e=>setNewTodoText(e.target.value)} placeholder={`${date.toLocaleDateString()} 일정 입력`} className="input" />
+                <input 
+                  id="study-time-input"
+                  type="number" 
+                  min="0" 
+                  placeholder="분" 
+                  className="input" 
+                  style={{width: '80px'}}
+                />
+                <button className="btn btn-dark" onClick={()=>addTodo('study')}>추가</button>
+              </div>
+            )}
+            <ul className="list">
+              {studyList.map(it=> (
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('study', it.id)} style={{justifyContent:'space-between'}}>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>
+                    <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('study', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('study', it.id)}}>삭제</button>
+                  </span>
+                </li>
+              ))}
+              {studyList.length===0 && <li className="small" style={{color:'#64748b'}}>선택한 날짜에 일정이 없습니다.</li>}
             </ul>
           </CardContent>
         </Card>
@@ -1070,13 +1331,21 @@ export default function App(){
                 {showAddInputExtra[cat.id] && (
                   <div style={{display:'flex', gap:8, marginBottom:8}}>
                     <input className="input" value={newTodoTextExtra[cat.id]||''} onChange={e=>setNewTodoTextExtra(prev=>({...prev, [cat.id]: e.target.value}))} placeholder={`${date.toLocaleDateString()} 일정 입력`} />
+                    <input 
+                      id={`extra-${cat.id}-time-input`}
+                      type="number" 
+                      min="0" 
+                      placeholder="분" 
+                      className="input" 
+                      style={{width: '80px'}}
+                    />
                     <button className="btn btn-dark" onClick={()=>addExtraTodo(cat.id)}>추가</button>
                   </div>
                 )}
                 <ul className="list">
                   {list.map(it => (
                     <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleExtraTodo(cat.id, it.id)} style={{justifyContent:'space-between'}}>
-                      <span>{it.label}</span>
+                      <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                       <span>
                         <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleExtraTodo(cat.id, it.id)} onClick={e=>e.stopPropagation()} />
                         <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteExtraTodo(cat.id, it.id)}}>삭제</button>
@@ -1090,29 +1359,16 @@ export default function App(){
           )
         })}
 
-        <Card className="mb-3">
-          <CardHeader>
-            <CardTitle>카테고리 추가 <button className="btn btn-xs" style={{marginLeft:8}} onClick={()=>setShowAddCategory(s=>!s)}>+</button></CardTitle>
-          </CardHeader>
-          <CardContent>
-            {showAddCategory && (
-              <div style={{display:'flex', gap:8}}>
-                <input className="input" value={newCategoryName} onChange={e=>setNewCategoryName(e.target.value)} placeholder="카테고리명 입력" />
-                <button className="btn btn-dark" onClick={addCategory}>추가</button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        
         </>
         ) : (
         <>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}} className="mb-3">
             <h2 style={{fontSize: '18px', fontWeight: 700}}>
               {
-              rightPanel.type === 'pdf' ? 'PDF' :
-              rightPanel.type === 'report' ? '리포트' :
+              rightPanel.type === 'pdf-report' ? 'PDF 리포트' :
               rightPanel.type === 'wrong-note' ? '오답노트' :
-              rightPanel.type === 'quiz-set' ? '보완문제' : '내보내기'
+              rightPanel.type === 'supplementary-quiz' ? '보충문제' : '내보내기'
               }
             </h2>
           </div>
@@ -1121,51 +1377,130 @@ export default function App(){
               <CardTitle>미리보기</CardTitle>
             </CardHeader>
             <CardContent>
-              {rightPanel.type === 'pdf' && (
+              {rightPanel.type === 'pdf-report' && (
                 <div className="small">
-                  <p><b>제목</b>: 2025-08-모의고사 진단 리포트</p>
-                  <p><b>요약</b>: 점수 78, 정답률 {computeListCompletion(workoutList)}% · 취약개념 5개 · 권장코스 3개</p>
-                  <ul className="list" style={{marginTop:8}}>
-                    <li className="item">1. 분수 나눗셈 원리 복습 – 25분</li>
-                    <li className="item">2. 속력/거리/시간 단위 변환 – 20분</li>
-                    <li className="item">3. 확률 기초 재훈련 – 30분</li>
-                  </ul>
-                </div>
-              )}
-              {rightPanel.type === 'report' && (
-                <div className="small">
-                  <p><b>리포트</b>: 진단 요약과 학습 계획</p>
-                  <ul className="list" style={{marginTop:8}}>
-                    <li className="item">요약 점수/정답률/취약개념</li>
-                    <li className="item">주간 학습 계획(3모듈)</li>
-                    <li className="item">추천 자료 및 링크</li>
-                  </ul>
+                  <p><b>PDF 리포트 미리보기</b></p>
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                      <h4 className="font-semibold text-blue-800 mb-2">점수 요약</h4>
+                      <p className="text-sm text-blue-700">점수: 78점 (13/20), 평균 정답률: 65%</p>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                      <h4 className="font-semibold text-green-800 mb-2">개념 분석</h4>
+                      <p className="text-sm text-green-700">수와 연산, 기하, 확률과 통계, 문자와 식</p>
+                      <p className="text-sm text-red-600">취약: 분수 나눗셈, 속력 공식</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                      <h4 className="font-semibold text-yellow-800 mb-2">그래프/시각화</h4>
+                      <p className="text-sm text-yellow-700">정답률 그래프, 개념별 취약도 차트</p>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                      <h4 className="font-semibold text-purple-800 mb-2">피드백 코멘트</h4>
+                      <p className="text-sm text-purple-700">수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다.</p>
+                    </div>
+                  </div>
                 </div>
               )}
               {rightPanel.type === 'wrong-note' && (
                 <div className="small">
-                  <p><b>오답노트</b>: 틀린 문제 정리와 원인 분석</p>
-                  <ul className="list" style={{marginTop:8}}>
-                    <li className="item">5번: 분수 나눗셈 – 역수 적용 누락</li>
-                    <li className="item">8번: 속력 공식 – 단위 변환 오류</li>
-                    <li className="item">11번: 확률 – 표본공간 설정 미흡</li>
-                  </ul>
+                  <p><b>오답노트 미리보기</b></p>
+                  <div className="space-y-3">
+                    <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
+                      <h4 className="font-semibold text-red-800 mb-2">틀린 문제 원문</h4>
+                      <p className="text-sm text-red-700">5번: 분수 나눗셈 문제</p>
+                      <p className="text-sm text-red-700">8번: 속력 계산 문제</p>
+                      <p className="text-sm text-red-700">11번: 확률 계산 문제</p>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded border-l-4 border-orange-400">
+                      <h4 className="font-semibold text-orange-800 mb-2">내 풀이 흔적</h4>
+                      <p className="text-sm text-orange-700">"역수? 어떻게?" (5번)</p>
+                      <p className="text-sm text-orange-700">"단위 변환 복잡함" (8번)</p>
+                      <p className="text-sm text-orange-700">"표본공간이 뭐지?" (11번)</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                      <h4 className="font-semibold text-blue-800 mb-2">정답/해설</h4>
+                      <p className="text-sm text-blue-700">5번: 역수 곱하기를 깜빡함</p>
+                      <p className="text-sm text-blue-700">8번: km/h → m/s 변환 오류</p>
+                      <p className="text-sm text-blue-700">11번: 표본공간 설정 안됨</p>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                      <h4 className="font-semibold text-green-800 mb-2">비고란</h4>
+                      <p className="text-sm text-green-700">학생이 직접 메모할 수 있는 공간</p>
+                    </div>
+                  </div>
                 </div>
               )}
-              {rightPanel.type === 'quiz-set' && (
+              {rightPanel.type === 'supplementary-quiz' && (
                 <div className="small">
-                  <p><b>보완문제 세트</b>: 취약 개념 기반 10문항</p>
-                  <ul className="list" style={{marginTop:8}}>
-                    <li className="item">Q1. 3/5 ÷ 2/3 = ?</li>
-                    <li className="item">Q4. 54km/h는 m/s로?</li>
-                    <li className="item">Q7. 주사위 2개 합이 9일 확률?</li>
-                  </ul>
+                  <p><b>보충문제 미리보기</b></p>
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                      <h4 className="font-semibold text-blue-800 mb-2">자동 생성 문제</h4>
+                      <p className="text-sm text-blue-700">틀린 개념 위주로 난이도 조정</p>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                      <h4 className="font-semibold text-green-800 mb-2">개념별 문제</h4>
+                      <ul className="text-sm text-green-700 space-y-1">
+                        <li>• 분수 나눗셈: 2문항 (쉬움)</li>
+                        <li>• 속력 공식: 2문항 (보통)</li>
+                        <li>• 확률 기초: 2문항 (보통)</li>
+                        <li>• 도형의 성질: 1문항 (어려움)</li>
+                      </ul>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                      <h4 className="font-semibold text-purple-800 mb-2">추천 학습 루트</h4>
+                      <p className="text-sm text-purple-700">1. 분수 나눗셈 → 2. 속력 공식 → 3. 확률 기초 → 4. 도형의 성질</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                      <h4 className="font-semibold text-yellow-800 mb-2">정답 및 해설</h4>
+                      <p className="text-sm text-yellow-700">모든 문제에 상세한 해설 포함</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
+          {rightPanel.type === 'pdf-report' && (
+            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>💡 AI 코치 연동 안내</strong><br/>
+                이 버튼을 클릭하면 시험지 메타데이터가 AI 코치에 자동으로 전송되어, 
+                정밀한 학습 경험과 상세한 코칭을 받을 수 있습니다.
+              </p>
+            </div>
+          )}
           <div style={{display:'flex',gap:8}}>
             <button className="btn btn-dark">다운로드</button>
+            {rightPanel.type === 'pdf-report' && (
+              <button 
+                className="btn btn-dark" 
+                onClick={() => {
+                  // 시험지 메타데이터를 LLM 챗봇에 전송
+                  const examData = {
+                    score: 78,
+                    totalQuestions: 20,
+                    correctAnswers: 13,
+                    weakConcepts: ['분수 나눗셈', '속력 공식', '확률 기초'],
+                    coveredConcepts: ['수와 연산', '기하', '확률과 통계', '문자와 식'],
+                    summaryComment: '수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다.'
+                  }
+                  
+                  // AI 코치로 전송하는 이벤트 발생
+                  window.dispatchEvent(new CustomEvent('send-to-llm', { 
+                    detail: { 
+                      type: 'exam-metadata', 
+                      data: examData,
+                      message: `시험지 분석 결과가 AI 코치에 전송되었습니다. 이제 AI 코치에서 정밀한 학습 경험과 상세한 코칭을 받을 수 있습니다.`
+                    } 
+                  }))
+                  
+                  // NOMA lab 탭으로 이동
+                  setActiveView('journey')
+                }}
+                              >
+                  AI 코치로 보내기
+                </button>
+            )}
             <button className="btn" onClick={()=>setRightPanel({ type: 'todo', payload: null })}>닫기</button>
           </div>
         </>

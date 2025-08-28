@@ -395,7 +395,7 @@ export default function MultiDomainCoachHub() {
   const initial = [
     { id: uid('dom'), name: '토익 RC/LC', category: 'study' },
     { id: uid('dom'), name: '영어 회화', category: 'study' },
-    { id: uid('dom'), name: '근력/유산소', category: 'workout' },
+            { id: uid('dom'), name: '근력/유산소', category: '근력/유산소' },
   ]
   const [domains, setDomains] = useState(initial)
   const [activeId, setActiveId] = useState(initial[0].id)

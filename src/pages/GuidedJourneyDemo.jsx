@@ -29,15 +29,17 @@ const Progress = ({ value = 0 }) => (
 const sleep = (ms) => new Promise((r)=>setTimeout(r, ms))
 
 async function apiIdentifyExam() {
-  await sleep(700)
+  await sleep(1500) // 1.5초로 증가
   return {
-    label: '수능수학',
+    label: '2024학년도 수학 수능 시험지',
     confidence: 0.86,
     decision: 'auto',
     scope: ['확률과통계','수학Ⅱ'],
     alternatives: [
-      { label: '공무원(국가직)', confidence: 0.61 },
-      { label: 'SQLD', confidence: 0.34 }
+      { label: '2025년 8월 30일자 인바디 측정표', confidence: 0.78 },
+      { label: '5급 공개경쟁채용시험(행정) 상황판단영역 가', confidence: 0.72 },
+      { label: '세법 모의고사 1회차', confidence: 0.65 },
+      { label: 'SQDL', confidence: 0.58 }
     ],
     signals: { rule: 0.92, clf: 0.83, embed: 0.78 }
   }
@@ -52,13 +54,57 @@ async function apiDiagnose(){
   await sleep(800)
   return {
     score: 78,
+    totalQuestions: 20,
+    correctAnswers: 13,
     accuracy: 65,
-    weakConcepts: ['분수 나눗셈','속력 공식','확률 기초','도형의 성질','비와 비율'],
+    weakConcepts: [
+      { name: '분수 나눗셈', description: '역수 적용 원리 미흡', count: 3 },
+      { name: '속력 공식', description: '단위 변환 계산 오류', count: 2 },
+      { name: '확률 기초', description: '표본공간 설정 부족', count: 2 },
+      { name: '도형의 성질', description: '각도 관계 이해 부족', count: 1 },
+      { name: '비와 비율', description: '비례식 변형 미숙', count: 1 }
+    ],
     mistakes: [
-      {num:5, text:'분수 나눗셈'},
-      {num:8, text:'속력 vs 시간 혼동'},
-      {num:11, text:'확률 계산 오류'}
-    ]
+      {num:5, text:'분수 나눗셈', concept:'분수 나눗셈', note:'역수 곱하기를 깜빡함'},
+      {num:8, text:'속력 vs 시간 혼동', concept:'속력 공식', note:'km/h → m/s 변환 오류'},
+      {num:11, text:'확률 계산 오류', concept:'확률 기초', note:'표본공간 설정 안됨'},
+      {num:15, text:'도형 각도 계산', concept:'도형의 성질', note:'보조선 그리기 필요'},
+      {num:18, text:'비례식 변형', concept:'비와 비율', note:'교차곱셈 공식 미숙'}
+    ],
+    handwritingNotes: [
+      {
+        concept: '분수 나눗셈', 
+        userNote: '역수? 어떻게?', 
+        type: 'confusion',
+        aiAnalysis: '사용자가 분수 나눗셈에서 역수 개념을 정확히 이해하지 못함',
+        aiExplanation: '역수는 분모와 분자를 바꾼 수입니다. 예를 들어, 2/3의 역수는 3/2입니다. 분수 나눗셈은 나누는 수의 역수를 곱하는 것과 같습니다.'
+      },
+      {
+        concept: '속력 공식', 
+        userNote: '단위 변환 복잡함', 
+        type: 'difficulty',
+        aiAnalysis: '사용자가 속력 공식에서 단위 변환 과정을 어려워함',
+        aiExplanation: '속력은 거리를 시간으로 나눈 값입니다. km/h를 m/s로 변환할 때는 1000÷3600을 곱하면 됩니다. 1km/h = 0.278m/s입니다.'
+      },
+      {
+        concept: '확률 기초', 
+        userNote: '표본공간이 뭐지?', 
+        type: 'question',
+        aiAnalysis: '사용자가 확률의 기본 개념인 표본공간을 모르고 있음',
+        aiExplanation: '표본공간은 실험에서 일어날 수 있는 모든 결과의 집합입니다. 주사위를 던질 때 표본공간은 {1,2,3,4,5,6}입니다.'
+      },
+      {
+        concept: '도형의 성질', 
+        userNote: '각도 관계 모르겠음', 
+        type: 'confusion',
+        aiAnalysis: '사용자가 도형에서 각도 간의 관계를 혼란스러워함',
+        aiExplanation: '삼각형의 세 각의 합은 180도입니다. 평행선과 한 직선이 만날 때 생기는 동위각, 엇각은 서로 같습니다.'
+      }
+    ],
+    coveredConcepts: [
+      '수와 연산', '문자와 식', '함수', '기하', '확률과 통계'
+    ],
+    summaryComment: '수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다. 특히 역수 개념과 단위 변환 연습이 필요합니다.'
   }
 }
 
@@ -98,7 +144,7 @@ const GUIDE = {
   diagnose: { tip:'점수/정답률/취약 개념을 계산합니다.', cta:'진단 결과 보기' },
   coach:    { tip:'개선 플랜과 학습 코스를 생성합니다.', cta:'코칭 플랜 보기' },
   export:   { tip:'리포트/요약노트/보완문제를 파일로 만듭니다.', cta:'파일 생성' },
-  handoff:  { tip:'이제 챗봇으로 넘어가 세부 질문/업데이트를 진행합니다.', cta:'LLM 챗봇으로 이동' },
+          handoff:  { tip:'이제 AI 코치로 넘어가 세부 질문/업데이트를 진행합니다.', cta:'AI 코치로 이동' },
 }
 
 export default function GuidedJourneyDemo(){
@@ -118,10 +164,14 @@ export default function GuidedJourneyDemo(){
   const [courseDone, setCourseDone] = useState(0)
   const [prevDiag, setPrevDiag] = useState(null)
   const [improvementNote, setImprovementNote] = useState(null)
+  const [showLoadingModal, setShowLoadingModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showDiagnosisDetail, setShowDiagnosisDetail] = useState(false)
+  const [examOptions, setExamOptions] = useState([])
   const [domains, setDomains] = useState([
-    { id: 'toeic', name: '토익 RC/LC', tag: 'study', progress: 0 },
-    { id: 'speaking', name: '영어 회화', tag: 'study', progress: 0 },
-    { id: 'workout', name: '근력/유산소', tag: 'workout', progress: 0 },
+            { id: '토익 RC/LC', name: '토익 RC/LC', tag: 'study', progress: 0 },
+            { id: '영어 회화', name: '영어 회화', tag: 'study', progress: 0 },
+            { id: '근력/유산소', name: '근력/유산소', tag: '근력/유산소', progress: 0 },
   ])
 
   const progress = useMemo(()=> {
@@ -137,8 +187,12 @@ export default function GuidedJourneyDemo(){
         log('샘플 시험지 업로드 완료')
         break
       case 'identify': {
+        setShowLoadingModal(true)
         const r = await apiIdentifyExam()
+        setShowLoadingModal(false)
         setExamInfo(r)
+        setExamOptions([r.label, ...r.alternatives.map(alt => alt.label)])
+        setShowConfirmModal(true)
         log(`시험 자동 인식: ${r.label} (신뢰도 ${Math.round(r.confidence*100)}%)`)
         break }
       case 'scope':
@@ -174,7 +228,7 @@ export default function GuidedJourneyDemo(){
         break }
       case 'handoff':
         setTab('chatbot')
-        log('LLM 챗봇으로 이동')
+        log('AI 코치로 이동')
         break
     }
   }
@@ -240,7 +294,7 @@ export default function GuidedJourneyDemo(){
       <Tabs value={tab} onValueChange={setTab} className="w-full h-full flex flex-col gap-4">
         <TabsList className="grid grid-cols-2 w-full md:w-1/3 mx-auto">
           <TabsTrigger value="diagnosis">진단·코칭</TabsTrigger>
-          <TabsTrigger value="chatbot">LLM 챗봇</TabsTrigger>
+          <TabsTrigger value="chatbot">AI 코치</TabsTrigger>
         </TabsList>
 
         <TabsContent value="diagnosis" className="p-0">
@@ -300,7 +354,7 @@ export default function GuidedJourneyDemo(){
                       {examInfo.scope?.length>0 && <span className="ml-2 text-gray-600">범위: {examInfo.scope.join(', ')}</span>}
                     </div>
                   )}
-                  <div className="mt-3"><Button variant="outline" size="sm" title="헤더/로고/형식 등을 바탕으로 자동 판별" onClick={async()=>{ await runStep('identify'); setCurrent('scope') }}>자동 인식 결과 확인</Button></div>
+                  <div className="mt-3"><Button variant="outline" size="sm" title="헤더/로고/형식 등을 바탕으로 자동 판별" onClick={async()=>{ await runStep('identify') }}>시험 자동 인식</Button></div>
                 </CardContent>
               </Card>
 
@@ -312,49 +366,118 @@ export default function GuidedJourneyDemo(){
                 <CardContent>
                   {!diag && <div className="text-sm text-gray-500">OCR 처리 후 자동 분석됩니다.</div>}
                   {diag && (
-                    <div className="space-y-2">
-                      <div>점수: <b>{diag.score}점</b></div>
-                      <div className="text-sm">평균 정답률: {diag.accuracy}%</div>
-                      <Progress value={diag.accuracy}/>
+                    <div className="space-y-3">
+                      {/* 점수 */}
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="text-lg font-bold text-blue-800">
+                          점수: {diag.score}점 ({diag.correctAnswers}/{diag.totalQuestions})
+                        </div>
+                      </div>
+
+                      {/* 요약 코멘트 */}
+                      <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                        <h4 className="font-semibold text-green-800 mb-2">요약 코멘트</h4>
+                        <p className="text-sm text-green-700">{diag.summaryComment}</p>
+                      </div>
+
+                      {/* 세부 내용 보기 버튼 */}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => setShowDiagnosisDetail(true)}
+                      >
+                        세부 내용 보기
+                      </Button>
                     </div>
                   )}
                   <div className="mt-3"><Button size="sm" title="OCR 완료 후 점수/정답률/취약개념 계산" onClick={async()=>{ if(!ocrInfo){ await runStep('scope'); await runStep('ocr'); } await runStep('diagnose') }}>진단 실행</Button></div>
                 </CardContent>
               </Card>
 
-              {/* 개념 맵 & Heatmap (중앙 하단) */}
+              {/* 시험지 분석 */}
               <Card className="min-h-[260px]">
                 <CardHeader>
-                  <CardTitle>세그먼트</CardTitle>
+                  <CardTitle>시험지 분석</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xs text-gray-600 mb-2">제목 · 카테고리 · 분량(분) · 완료</div>
-                  <div className="border rounded-md overflow-hidden">
-                    <div className="grid grid-cols-12 px-3 py-2 text-sm border-b bg-gray-50">
-                      <div className="col-span-5">RC 문장 구조 & 어휘</div>
-                      <div className="col-span-3">기타</div>
-                      <div className="col-span-2">5</div>
-                      <div className="col-span-2 text-rose-600">미완</div>
+                  {!diag ? (
+                    <div className="text-sm text-gray-500">진단 완료 후 시험지 분석이 표시됩니다.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* 수와 연산 */}
+                      <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-blue-800">수와 연산</h5>
+                          <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                            {diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0}문제 오답
+                          </span>
+                        </div>
+                        <div className="text-sm text-blue-700 mb-2">
+                          분수 나눗셈, 비와 비율 등
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-blue-600">
+                          <span>총 8문제</span>
+                          <span>•</span>
+                          <span>정답: {8 - (diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0)}문제</span>
+                        </div>
+                      </div>
+
+                      {/* 기하 */}
+                      <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-green-800">기하</h5>
+                          <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                            {diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0}문제 오답
+                          </span>
+                        </div>
+                        <div className="text-sm text-green-700 mb-2">
+                          도형의 성질, 각도 관계 등
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-green-600">
+                          <span>총 5문제</span>
+                          <span>•</span>
+                          <span>정답: {5 - (diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0)}문제</span>
+                        </div>
+                      </div>
+
+                      {/* 확률과 통계 */}
+                      <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-400">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-purple-800">확률과 통계</h5>
+                          <span className="text-sm text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                            {diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0}문제 오답
+                          </span>
+                        </div>
+                        <div className="text-sm text-purple-700 mb-2">
+                          확률 기초, 표본공간 등
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-purple-600">
+                          <span>총 4문제</span>
+                          <span>•</span>
+                          <span>정답: {4 - (diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0)}문제</span>
+                        </div>
+                      </div>
+
+                      {/* 문자와 식 */}
+                      <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-orange-800">문자와 식</h5>
+                          <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                            {diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0}문제 오답
+                          </span>
+                        </div>
+                        <div className="text-sm text-orange-700 mb-2">
+                          속력 공식, 단위 변환 등
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-orange-600">
+                          <span>총 3문제</span>
+                          <span>•</span>
+                          <span>정답: {3 - (diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0)}문제</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-12 px-3 py-2 text-sm border-b">
-                      <div className="col-span-5">LC Part 2 응답 패턴</div>
-                      <div className="col-span-3">기타</div>
-                      <div className="col-span-2">5</div>
-                      <div className="col-span-2 text-rose-600">미완</div>
-                    </div>
-                    <div className="grid grid-cols-12 px-3 py-2 text-sm border-b">
-                      <div className="col-span-5">실전 모의 RC 20문</div>
-                      <div className="col-span-3">관계사</div>
-                      <div className="col-span-2">5</div>
-                      <div className="col-span-2 text-rose-600">미완</div>
-                    </div>
-                    <div className="grid grid-cols-12 px-3 py-2 text-sm">
-                      <div className="col-span-5">실전 모의 LC 15문</div>
-                      <div className="col-span-3">기타</div>
-                      <div className="col-span-2">5</div>
-                      <div className="col-span-2 text-rose-600">미완</div>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -393,26 +516,22 @@ export default function GuidedJourneyDemo(){
                 <CardTitle>내보내기</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf' } }))}><FileText className="mr-2" size={16}/> PDF</Button>
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'report' } }))}>리포트</Button>
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note' } }))}>오답노트</Button>
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'quiz-set' } }))}>보완문제</Button>
+                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf-report' } }))}><FileText className="mr-2" size={16}/> PDF 리포트</Button>
+                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note' } }))}><FileText className="mr-2" size={16}/> 오답노트</Button>
+                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'supplementary-quiz' } }))}><FileText className="mr-2" size={16}/> 보충문제</Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* 하단 액션 바: LLM 챗봇으로 보내기 */}
-          <div className="mt-3 flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={sendToChatbot} title="취약개념/우선순위/코칭 플랜을 챗봇 세션으로 전송">LLM 챗봇으로 보내기</Button>
-          </div>
+
         </TabsContent>
 
         <TabsContent value="chatbot" className="p-0">
-          {/* AI LLM 챗봇 인포그래픽 */}
+          {/* AI 코치 인포그래픽 */}
           <div className="w-full mb-4">
             <img 
               src="/ai-llm-chatbot-infographic.svg" 
-              alt="AI LLM 챗봇 코치" 
+              alt="AI 코치" 
               style={{
                 width: '100%',
                 height: 'auto',
@@ -480,6 +599,202 @@ export default function GuidedJourneyDemo(){
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* AI 인식 로딩바 모달 */}
+      {showLoadingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium mb-2">AI 인식 로딩바</h3>
+              <p className="text-gray-600">시험지를 분석하고 있습니다...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 시험지 확인 모달 */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">AI가 인식한 시험지가 맞나요?</h3>
+            <div className="space-y-3 mb-6">
+              {examOptions.map((option, index) => (
+                <div key={index} className="p-3 border rounded-lg hover:bg-gray-50">
+                  <div className="font-medium">{option}</div>
+                  {index === 0 && <span className="text-sm text-purple-600">(가장 높은 신뢰도)</span>}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowConfirmModal(false)
+                  setCurrent('scope')
+                }}
+              >
+                맞아요
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowConfirmModal(false)
+                  const customName = prompt('시험지 정보를 입력해주세요:')
+                  if (customName) {
+                    setExamInfo(prev => ({ ...prev, label: customName }))
+                    setCurrent('scope')
+                  }
+                }}
+              >
+                아니요
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 진단 세부 내용 모달 */}
+      {showDiagnosisDetail && diag && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800">진단 세부 분석 결과</h3>
+              <button 
+                onClick={() => setShowDiagnosisDetail(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 왼쪽 컬럼 */}
+              <div className="space-y-6">
+                {/* 주요 오답 개념 */}
+                <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                  <h4 className="font-semibold text-red-800 mb-3 text-lg">주요 오답 개념</h4>
+                  <div className="space-y-3">
+                    {diag.weakConcepts.map((concept, idx) => (
+                      <div key={idx} className="bg-white p-3 rounded border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-red-800">{concept.name}</span>
+                          <span className="text-sm text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                            {concept.count}회 오답
+                          </span>
+                        </div>
+                        <p className="text-sm text-red-700">{concept.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 잘못 이해한 부분 */}
+                <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="font-semibold text-yellow-800 text-lg">잘못 이해한 부분</h4>
+                    <div className="relative group">
+                      <span className="text-yellow-600 cursor-help">ⓘ</span>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                        AI가 사용자의 필기와 메모를 분석하여 이해하지 못한 개념을 파악했습니다
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {diag.handwritingNotes.map((note, idx) => (
+                      <div key={idx} className="bg-white p-4 rounded border">
+                        <div className="grid grid-cols-1 gap-3">
+                          {/* 개념명과 사용자 필기 */}
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-medium text-yellow-800 mb-1">{note.concept}</div>
+                              <div className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                                사용자 필기: "{note.userNote}"
+                              </div>
+                            </div>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              note.type === 'confusion' ? 'bg-red-100 text-red-600' :
+                              note.type === 'difficulty' ? 'bg-orange-100 text-orange-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {note.type === 'confusion' ? '혼란' : 
+                               note.type === 'difficulty' ? '어려움' : '질문'}
+                            </span>
+                          </div>
+                          
+                          {/* AI 분석 */}
+                          <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                            <div className="text-sm font-medium text-blue-800 mb-1">AI 분석</div>
+                            <div className="text-sm text-blue-700">{note.aiAnalysis}</div>
+                          </div>
+                          
+                          {/* AI 해설 */}
+                          <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                            <div className="text-sm font-medium text-green-800 mb-1">AI 해설</div>
+                            <div className="text-sm text-green-700">{note.aiExplanation}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 오른쪽 컬럼 */}
+              <div className="space-y-6">
+                {/* 문제들이 다루는 전체 개념 */}
+                <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                  <h4 className="font-semibold text-blue-800 mb-3 text-lg">문제들이 다루는 전체 개념</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {diag.coveredConcepts.map((concept, idx) => (
+                      <span key={idx} className="bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm font-medium">
+                        {concept}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI 진단 분석 */}
+                <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-400">
+                  <h4 className="font-semibold text-purple-800 mb-3 text-lg">AI 진단 분석</h4>
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded border">
+                      <div className="text-sm text-purple-700 mb-2">
+                        <strong>취약도 분석:</strong> 분수 나눗셈과 속력 공식에서 가장 높은 오답률
+                      </div>
+                      <div className="text-sm text-purple-700 mb-2">
+                        <strong>개선 우선순위:</strong> 역수 개념 → 단위 변환 → 표본공간 이해
+                      </div>
+                      <div className="text-sm text-purple-700">
+                        <strong>예상 학습 시간:</strong> 총 75분 (25분 + 20분 + 30분)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 문항별 상세 분석 */}
+                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                  <h4 className="font-semibold text-green-800 mb-3 text-lg">문항별 상세 분석</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {diag.mistakes.map((mistake, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border text-sm">
+                        <span className="font-medium text-green-800">#{mistake.num}</span>
+                        <span className="text-green-700 ml-2">{mistake.text}</span>
+                        <div className="text-xs text-green-600 mt-1">{mistake.note}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setShowDiagnosisDetail(false)}>
+                닫기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }

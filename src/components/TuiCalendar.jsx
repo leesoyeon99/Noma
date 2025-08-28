@@ -66,7 +66,7 @@ export default function TuiCalendar({
     }
   }, [schedules])
 
-  return <div ref={elRef} style={{ width: '100%', height: '640px' }} />
+                return <div ref={elRef} style={{ width: '100%', height: '640px' }} />
 }
 
 

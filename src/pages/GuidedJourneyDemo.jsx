@@ -301,7 +301,7 @@ export default function GuidedJourneyDemo(){
         <TabsContent value="diagnosis" className="p-0">
           <div className="w-full mb-4">
             <img 
-              src="./ai-coaching-infographic.svg" 
+              src="img/ai-coaching-infographic.svg" 
               alt="AI 코칭 프로세스" 
               style={{
                 width: '100%',
@@ -531,7 +531,7 @@ export default function GuidedJourneyDemo(){
           {/* AI 코치 인포그래픽 */}
           <div className="w-full mb-4">
             <img 
-              src="./ai-llm-chatbot-infographic.svg" 
+              src="img/ai-llm-chatbot-infographic.svg" 
               alt="AI 코치" 
               style={{
                 width: '100%',

@@ -1238,7 +1238,7 @@ export default function App(){
             {/* AI 코칭 인포그래픽 */}
             <div className="mb-6 text-center">
               <img 
-                src="./ai-coaching-infographic.svg" 
+                src="img/ai-coaching-infographic.svg" 
                 alt="AI 코칭 프로세스" 
                 style={{
                   maxWidth: '100%',

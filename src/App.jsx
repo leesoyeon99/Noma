@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import AgentNomaPanel from './components/AgentNomaPanel'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
-import { CalendarDays, Sparkles, Percent, AlertTriangle, TrendingUp, Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, Sparkles, Percent, AlertTriangle, TrendingUp, Lightbulb, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import AICoachShell from './pages/AICoachShell'
 import TuiCalendar from './components/TuiCalendar'
 import AICoachFilesTrackingChat from './pages/AICoachFilesTrackingChat'
@@ -763,29 +763,39 @@ export default function App(){
             <div className="row mb-4">
               <h1 className="title"><CalendarDays size={18}/> 2025.07</h1>
               <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <button
-                  className={`btn ${calendarType === 'calendar' ? 'btn-dark' : ''}`}
-                  onClick={() => setCalendarType('calendar')}
-                  style={{minWidth: '80px', height: '36px', fontSize: '14px'}}
-                >
-                  달력
-                </button>
-                <button
-                  className={`btn ${calendarType === 'heatmap' ? 'btn-dark' : ''}`}
-                  onClick={() => setCalendarType('heatmap')}
-                  style={{minWidth: '100px', height: '36px', fontSize: '14px'}}
-                >
-                  히트맵 달력
-                </button>
+                <div className="flex items-center bg-gray-200 rounded-lg p-1" style={{height: '36px'}}>
+                  <button
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
+                      calendarType === 'calendar' 
+                        ? 'bg-white text-gray-800 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                    onClick={() => setCalendarType('calendar')}
+                    style={{minWidth: '60px'}}
+                  >
+                    달력
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
+                      calendarType === 'heatmap' 
+                        ? 'bg-white text-gray-800 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                    onClick={() => setCalendarType('heatmap')}
+                    style={{minWidth: '80px'}}
+                  >
+                    히트맵 달력
+                  </button>
+                </div>
                 <button
                   className={`btn ${showRightAside ? 'btn-dark' : ''}`}
                   onClick={() => setShowRightAside(v => !v)}
                   style={{minWidth: '120px', height: '36px', fontSize: '14px'}}
                   aria-label="오늘의 투두 토글"
                 >
-                  <span style={{display: 'flex', alignItems: 'center'}}>
-                    오늘의 투두
-                    {showRightAside ? <ChevronRight size={16} style={{marginLeft: '4px'}}/> : <ChevronLeft size={16} style={{marginLeft: '4px'}}/>}
+                  <span style={{display: 'flex', alignItems: 'center', gap: '2px'}}>
+                    오늘의 할 일
+                    {showRightAside ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}
                   </span>
                 </button>
               </div>
@@ -1087,18 +1097,90 @@ export default function App(){
                       
                       return (
                         <>
-                          <li><b>시간 기준 진도율</b> {totalCompletedTime}분 / {totalPlannedTime}분 ({Math.round((totalCompletedTime / totalPlannedTime) * 100)}%)<br/>→ 계획된 시간 대비 실제 완료된 시간을 기준으로 진도를 측정합니다.</li>
-                          <li><b>가장 낮은 카테고리</b> "{lowestCategory.name}"(진도 {lowestCategory.progress}%)<br/>→ {lowestCategory.totalTime}분 중 {lowestCategory.completedTime}분 완료. 단기 테스크(10~15분)를 정해 꾸준히 수행하는 습관을 들이세요.</li>
-                          <li><b>시간 관리 팁</b><br/>→ 각 todo에 현실적인 시간을 설정하고, 완료 후 실제 소요 시간을 기록하여 더 정확한 계획 수립에 활용하세요.</li>
-                                                      <li>
-                              권장 보강 루틴
-                              <ul>
-                                <li>근력/유산소: 30분 단위로 분할하여 지속 가능한 루틴 구성</li>
-                                <li>토익 RC/LC: 20분 집중 학습 + 10분 복습으로 효율성 극대화</li>
-                                <li>영어 회화: 15분씩 하루 2-3회로 자연스러운 대화 연습</li>
-                                <li>study: 25분 집중 + 5분 휴식으로 효율적인 학습 진행</li>
-                              </ul>
-                            </li>
+                          {/* 시간 기준 진도율 */}
+                          <li className="mb-4">
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-blue-600">⏱️</span>
+                                <span className="font-semibold text-blue-800">시간 기준 진도율</span>
+                              </div>
+                              <div className="text-2xl font-bold text-blue-900 mb-1">
+                                {totalCompletedTime}분 / {totalPlannedTime}분
+                              </div>
+                              <div className="text-sm text-blue-700 mb-2">
+                                {Math.round((totalCompletedTime / totalPlannedTime) * 100)}% 완료
+                              </div>
+                              <div className="w-full bg-blue-200 rounded-full h-2">
+                                <div 
+                                  className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                  style={{width: `${Math.min(100, Math.round((totalCompletedTime / totalPlannedTime) * 100))}%`}}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-blue-600 mt-2">
+                                → 계획된 시간 대비 실제 완료된 시간을 기준으로 진도를 측정합니다.
+                              </div>
+                            </div>
+                          </li>
+
+                          {/* 가장 낮은 카테고리 */}
+                          <li className="mb-4">
+                            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-amber-600">⚠️</span>
+                                <span className="font-semibold text-amber-800">가장 낮은 카테고리</span>
+                              </div>
+                              <div className="text-lg font-bold text-amber-900 mb-1">
+                                "{lowestCategory.name}" (진도 {lowestCategory.progress}%)
+                              </div>
+                              <div className="text-sm text-amber-700 mb-2">
+                                {lowestCategory.totalTime}분 중 {lowestCategory.completedTime}분 완료
+                              </div>
+                              <div className="text-xs text-amber-600">
+                                → 단기 테스크(10~15분)를 정해 꾸준히 수행하는 습관을 들이세요.
+                              </div>
+                            </div>
+                          </li>
+
+                          {/* 시간 관리 팁 */}
+                          <li className="mb-4">
+                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-green-600">💡</span>
+                                <span className="font-semibold text-green-800">시간 관리 팁</span>
+                              </div>
+                              <div className="text-sm text-green-700">
+                                → 각 todo에 현실적인 시간을 설정하고, 완료 후 실제 소요 시간을 기록하여 더 정확한 계획 수립에 활용하세요.
+                              </div>
+                            </div>
+                          </li>
+
+                          {/* 권장 보강 루틴 */}
+                          <li className="mb-4">
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-purple-600">🎯</span>
+                                <span className="font-semibold text-purple-800">권장 보강 루틴</span>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="bg-white p-3 rounded border border-purple-100">
+                                  <div className="font-medium text-purple-800 mb-1">근력/유산소</div>
+                                  <div className="text-sm text-purple-600">30분 단위로 분할하여 지속 가능한 루틴 구성</div>
+                                </div>
+                                <div className="bg-white p-3 rounded border border-purple-100">
+                                  <div className="font-medium text-purple-800 mb-1">토익 RC/LC</div>
+                                  <div className="text-sm text-purple-600">20분 집중 학습 + 10분 복습으로 효율성 극대화</div>
+                                </div>
+                                <div className="bg-white p-3 rounded border border-purple-100">
+                                  <div className="font-medium text-purple-800 mb-1">영어 회화</div>
+                                  <div className="text-sm text-purple-600">15분씩 하루 2-3회로 자연스러운 대화 연습</div>
+                                </div>
+                                <div className="bg-white p-3 rounded border border-purple-100">
+                                  <div className="font-medium text-purple-800 mb-1">study</div>
+                                  <div className="text-sm text-purple-600">25분 집중 + 5분 휴식으로 효율적인 학습 진행</div>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
                         </>
                       )
                     })()}
@@ -1482,6 +1564,18 @@ export default function App(){
           )}
           <div style={{display:'flex',gap:8}}>
             <button className="btn btn-dark">다운로드</button>
+            {rightPanel.type === 'wrong-note' && (
+              <button 
+                className="btn btn-outline" 
+                title="오답노트 새로고침"
+                onClick={() => {
+                  // 오답노트 새로고침 로직
+                  console.log('오답노트 새로고침')
+                }}
+              >
+                <RefreshCw size={16} />
+              </button>
+            )}
             {rightPanel.type === 'pdf-report' && (
               <button 
                 className="btn btn-dark" 

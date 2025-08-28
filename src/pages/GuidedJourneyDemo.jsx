@@ -167,11 +167,12 @@ export default function GuidedJourneyDemo(){
   const [showLoadingModal, setShowLoadingModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showDiagnosisDetail, setShowDiagnosisDetail] = useState(false)
+  const [showTodoImportModal, setShowTodoImportModal] = useState(false)
   const [examOptions, setExamOptions] = useState([])
   const [domains, setDomains] = useState([
             { id: '토익 RC/LC', name: '실전 어휘 체크', tag: '토익 RC/LC', progress: 0 },
             { id: '영어 회화', name: '일상 회화 연습', tag: '영어 회화', progress: 0 },
-            { id: '근력/유산소', name: '1박 2일 크로스핏 캠프', tag: '근력/유산소', progress: 0 },
+            { id: '근력/유산소', name: '유산소 30분', tag: '근력/유산소', progress: 0 },
   ])
 
   const progress = useMemo(()=> {
@@ -300,7 +301,7 @@ export default function GuidedJourneyDemo(){
         <TabsContent value="diagnosis" className="p-0">
           <div className="w-full mb-4">
             <img 
-              src="./ai-coaching-infographic.svg" 
+              src="../ai-coaching-infographic.svg" 
               alt="AI 코칭 프로세스" 
               style={{
                 width: '100%',
@@ -530,7 +531,7 @@ export default function GuidedJourneyDemo(){
           {/* AI 코치 인포그래픽 */}
           <div className="w-full mb-4">
             <img 
-              src="./ai-llm-chatbot-infographic.svg" 
+              src="../ai-llm-chatbot-infographic.svg" 
               alt="AI 코치" 
               style={{
                 width: '100%',
@@ -554,13 +555,19 @@ export default function GuidedJourneyDemo(){
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-2"><Folder size={14}/> 세션</span>
-                    <Button variant="outline" size="sm" onClick={()=>{
-                      const tag = prompt('카테고리를 선택하세요 (근력/유산소, 토익 RC/LC, 영어 회화, study)', '근력/유산소')
-                      if (!tag) return
-                      const name = prompt('Todo 항목을 입력하세요 (예: 실전 어휘 체크)', '새로운 Todo')
-                      if (!name) return
-                      setDomains(prev => [...prev, { id: `dom-${Date.now()}`, name, tag, progress: 0 }])
-                    }}>추가</Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={()=>{
+                        const tag = prompt('카테고리를 선택하세요 (근력/유산소, 토익 RC/LC, 영어 회화, study)', '근력/유산소')
+                        if (!tag) return
+                        const name = prompt('Todo 항목을 입력하세요 (예: 실전 어휘 체크)', '새로운 Todo')
+                        if (!name) return
+                        setDomains(prev => [...prev, { id: `dom-${Date.now()}`, name, tag, progress: 0 }])
+                      }}>직접 추가</Button>
+                      <Button variant="outline" size="sm" onClick={()=>{
+                        // Todo 체크리스트에서 불러오기 모달 표시
+                        setShowTodoImportModal(true)
+                      }}>Todo에서 불러오기</Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm h-[360px] overflow-y-auto">
@@ -648,6 +655,90 @@ export default function GuidedJourneyDemo(){
                 }}
               >
                 아니요
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Todo 불러오기 모달 */}
+      {showTodoImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Todo 체크리스트에서 세션으로 불러오기</h3>
+            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+              {/* 근력/유산소 Todo */}
+              <div className="border rounded-lg p-3">
+                <h4 className="font-medium text-gray-800 mb-2">근력/유산소</h4>
+                <div className="space-y-2">
+                  <button 
+                    className="w-full text-left p-2 rounded hover:bg-gray-50 border"
+                    onClick={() => {
+                      setDomains(prev => [...prev, { 
+                        id: `dom-${Date.now()}`, 
+                        name: '유산소 30분', 
+                        tag: '근력/유산소', 
+                        progress: 0 
+                      }])
+                      setShowTodoImportModal(false)
+                    }}
+                  >
+                    <div className="font-medium">유산소 30분</div>
+                    <div className="text-sm text-gray-500">근력/유산소 카테고리</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 토익 RC/LC Todo */}
+              <div className="border rounded-lg p-3">
+                <h4 className="font-medium text-gray-800 mb-2">토익 RC/LC</h4>
+                <div className="space-y-2">
+                  <button 
+                    className="w-full text-left p-2 rounded hover:bg-gray-50 border"
+                    onClick={() => {
+                      setDomains(prev => [...prev, { 
+                        id: `dom-${Date.now()}`, 
+                        name: '실전 어휘 체크', 
+                        tag: '토익 RC/LC', 
+                        progress: 0 
+                      }])
+                      setShowTodoImportModal(false)
+                    }}
+                  >
+                    <div className="font-medium">실전 어휘 체크</div>
+                    <div className="text-sm text-gray-500">토익 RC/LC 카테고리</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 영어 회화 Todo */}
+              <div className="border rounded-lg p-3">
+                <h4 className="font-medium text-gray-800 mb-2">영어 회화</h4>
+                <div className="space-y-2">
+                  <button 
+                    className="w-full text-left p-2 rounded hover:bg-gray-50 border"
+                    onClick={() => {
+                      setDomains(prev => [...prev, { 
+                        id: `dom-${Date.now()}`, 
+                        name: '일상 회화 연습', 
+                        tag: '영어 회화', 
+                        progress: 0 
+                      }])
+                      setShowTodoImportModal(false)
+                    }}
+                  >
+                    <div className="font-medium">일상 회화 연습</div>
+                    <div className="text-sm text-gray-500">영어 회화 카테고리</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowTodoImportModal(false)}
+              >
+                닫기
               </Button>
             </div>
           </div>

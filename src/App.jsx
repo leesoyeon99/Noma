@@ -734,7 +734,18 @@ export default function App(){
                 <ul className="list">
                   {timeline.map((t, idx) => (
                     <li key={idx} className="item" style={{justifyContent:'space-between'}}>
-                      <span>{t.text}</span>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {t.category ? (
+                          <>
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex-shrink-0">
+                              {t.category}
+                            </span>
+                            <span className="text-sm truncate">{t.label}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm truncate">{t.text}</span>
+                        )}
+                      </div>
                       <span className="small" style={{color:'#64748b'}}>{t.time}</span>
                     </li>
                   ))}
@@ -1145,7 +1156,7 @@ export default function App(){
             {/* AI 코칭 인포그래픽 */}
             <div className="mb-6 text-center">
               <img 
-                src="./ai-coaching-infographic.svg" 
+                src="../ai-coaching-infographic.svg" 
                 alt="AI 코칭 프로세스" 
                 style={{
                   maxWidth: '100%',

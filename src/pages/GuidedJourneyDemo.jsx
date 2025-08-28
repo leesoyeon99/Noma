@@ -255,7 +255,7 @@ export default function GuidedJourneyDemo(){
   }
 
   const setMessagesInChatFromDomain = (dom) => {
-    setWarmSuggestion(`${dom.name} 학습을 시작합니다. 10~15분 코스를 제안할게요.`)
+    setWarmSuggestion(`${dom.name} 학습을 시작합니다. 무엇이든 질문해 보세요.`)
     setTab('chatbot')
   }
 
@@ -266,7 +266,7 @@ export default function GuidedJourneyDemo(){
     const first = plan[0]?.title || (top[0] || '핵심 개념')
     const firstTime = plan[0]?.time || '15분'
     setChatContext({ weakConcepts: diag.weakConcepts, priority: top, plan })
-    setWarmSuggestion(`오늘은 ${first}(${firstTime})부터 시작해볼까요?`)
+    setWarmSuggestion(`${first} 학습을 시작합니다. 무엇이든 질문해 보세요.`)
     setTab('chatbot')
   }
 
@@ -482,7 +482,7 @@ export default function GuidedJourneyDemo(){
                 </CardContent>
               </Card>
 
-              {/* 코칭 */}
+              {/* 코칭 제안 */}
               <Card className="min-h-[260px]">
                 <CardHeader>
                   <CardTitle>코칭 제안</CardTitle>
@@ -490,23 +490,117 @@ export default function GuidedJourneyDemo(){
                 <CardContent className="space-y-2">
                   {!coach && <div className="text-sm text-gray-500">진단 완료 후 플랜이 생성됩니다.</div>}
                   {coach && (
-                    <div className="space-y-2">
-                      <div className="text-sm text-gray-600">범위: {coach.scope?.join(', ')}</div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        {coach.plan.map((p,idx)=> (
-                          <div key={idx} className="p-3 rounded-xl border bg-white">
-                            <div className="font-medium">{p.title}</div>
-                            <div className="text-xs text-gray-600">소요 {p.time}</div>
-                            <div className="text-sm mt-1">{p.details}</div>
+                    <div className="space-y-3">
+                      {/* 학습 범위 요약 */}
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <div className="text-sm font-medium text-blue-800 mb-2">📚 학습 범위</div>
+                        <div className="text-sm text-blue-700">
+                          {coach.scope?.map((item, idx) => (
+                            <div key={idx} className="mb-1">• {item}</div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* 일정표 형태의 코칭 플랜 */}
+                      <div className="bg-white border rounded-lg overflow-hidden">
+                        <div className="bg-gray-50 px-4 py-2 border-b">
+                          <div className="text-sm font-medium text-gray-700">📅 일정표 형태 코칭 플랜</div>
+                        </div>
+                        <div className="p-0">
+                          <table className="w-full text-sm">
+                            <thead className="bg-gray-50">
+                              <tr className="border-b">
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">시간대</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">제목</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">설명</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">소요시간</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {coach.plan.map((p, idx) => (
+                                <tr key={idx} className="border-b hover:bg-gray-50">
+                                  <td className="px-3 py-2 text-xs text-gray-600">
+                                    {p.scheduledTime || '자동 배치'}
+                                  </td>
+                                  <td className="px-3 py-2 font-medium text-gray-800">
+                                    {p.title}
+                                  </td>
+                                  <td className="px-3 py-2 text-xs text-gray-600">
+                                    {p.details}
+                                  </td>
+                                  <td className="px-3 py-2 text-xs text-gray-600">
+                                    {p.time}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      
+                      {/* 일정 반영 옵션 */}
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <div className="text-sm font-medium text-green-800 mb-2">⚙️ 일정 반영 설정</div>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <label className="block text-green-700 mb-1">주간 반복 횟수</label>
+                            <select className="w-full p-1 border rounded text-xs">
+                              <option>1회</option>
+                              <option>2회</option>
+                              <option>3회</option>
+                              <option>4회</option>
+                              <option>5회</option>
+                            </select>
                           </div>
-                        ))}
+                          <div>
+                            <label className="block text-green-700 mb-1">진행 기간</label>
+                            <select className="w-full p-1 border rounded text-xs">
+                              <option>1주</option>
+                              <option>2주</option>
+                              <option>3주</option>
+                              <option>4주</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
-                  <div className="mt-2 flex gap-2">
-                    <Button onClick={async()=>{ await runStep('coach') }} title="취약 개념 보완 코스 구성">코칭 플랜 생성</Button>
-                    <Button variant="outline" onClick={async()=>{ await runStep('coach'); await runStep('export'); setCurrent('handoff') }} title="PDF/요약노트/보완문제 생성">파일 생성</Button>
+                  <div className="mt-3 flex gap-2">
+                    <Button 
+                      onClick={async()=>{ 
+                        await runStep('coach') 
+                      }} 
+                      title="취약 개념 보완 코스 구성"
+                      className="flex-1"
+                    >
+                      코칭 플랜 생성
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={async()=>{ 
+                        await runStep('coach'); 
+                        await runStep('export'); 
+                        setCurrent('handoff') 
+                      }} 
+                      title="PDF/요약노트/보완문제 생성"
+                      className="flex-1"
+                    >
+                      파일 생성
+                    </Button>
                   </div>
+                  
+                  {/* 일정에 바로 반영 버튼 */}
+                  {coach && (
+                    <Button 
+                      onClick={() => {
+                        // 일정표에 코칭 플랜 반영 로직
+                        alert('코칭 플랜이 일정표에 반영되었습니다! 📅')
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      📅 일정표에 바로 반영
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>

@@ -11,12 +11,12 @@ import GuidedJourneyDemo from './pages/GuidedJourneyDemo'
 
 // 기본 투두
 const DEFAULT_WORKOUT = [
-  { id: 'wdef1', label: '유산소 30분', done: false },
-  { id: 'wdef2', label: '스트레칭 10분', done: false },
+  { id: 'wdef1', label: '유산소', done: false, time: 30 },
+  { id: 'wdef2', label: '스트레칭', done: false, time: 10 },
 ]
 const DEFAULT_TOEIC = [
-  { id: 'tdef1', label: '실전 어휘 체크', done: false },
-  { id: 'tdef2', label: '오답노트 복습', done: false },
+  { id: 'tdef1', label: '실전 어휘 체크', done: false, time: 20 },
+  { id: 'tdef2', label: '오답노트 복습', done: false, time: 15 },
 ]
 
 // KPI 대시보드용 데이터
@@ -76,22 +76,50 @@ const formatDateKey = (d) => {
   return `${y}${m}${day}`
 }
 
-const Checklist = ({ items, onToggle }) => (
+const Checklist = ({ items, onToggle, onEdit, onDelete }) => (
   <ul className="list">
     {items.map(it => (
       <li
         key={it.id}
         className={'item ' + (it.done ? 'strike' : '')}
-        onClick={() => onToggle(it.id)}
       >
-        <input
-          type="checkbox"
-          className="checkbox"
-          checked={it.done}
-          onChange={() => onToggle(it.id)}
-          onClick={(e)=>e.stopPropagation()}
-        />
-        <span>{it.label}</span>
+        <div className="flex items-center gap-2 flex-1">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={it.done}
+            onChange={() => onToggle(it.id)}
+            onClick={(e)=>e.stopPropagation()}
+          />
+          <span className="flex-1">{it.label}</span>
+          {it.time && (
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              {it.time}분
+            </span>
+          )}
+        </div>
+        <div className="flex gap-1 ml-2">
+          <button
+            className="btn btn-xs btn-outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit && onEdit(it)
+            }}
+            title="수정"
+          >
+            ✏️
+          </button>
+          <button
+            className="btn btn-xs btn-outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete && onDelete(it.id)
+            }}
+            title="삭제"
+          >
+            🗑️
+          </button>
+        </div>
       </li>
     ))}
   </ul>
@@ -204,16 +232,16 @@ export default function App(){
     { id: 'w2', label: '유산소 30분', done: false },
   ])
   const [toeicTodos, setToeicTodos] = useState([
-    { id: 't1', label: '실전 어휘 체크', done: false },
-    { id: 't2', label: '오답노트 복습', done: false },
+    { id: 't1', label: '실전 어휘 체크', done: false, time: 20 },
+    { id: 't2', label: '오답노트 복습', done: false, time: 15 },
   ])
   const [englishConversationTodos, setEnglishConversationTodos] = useState([
-    { id: 'ec1', label: '일상 회화 연습', done: false },
-    { id: 'ec2', label: '비즈니스 영어', done: false },
+    { id: 'ec1', label: '일상 회화 연습', done: false, time: 25 },
+    { id: 'ec2', label: '비즈니스 영어', done: false, time: 30 },
   ])
   const [studyTodos, setStudyTodos] = useState([
-    { id: 's1', label: '수학 공부', done: false },
-    { id: 's2', label: '과학 실험', done: false },
+    { id: 's1', label: '수학 공부', done: false, time: 45 },
+    { id: 's2', label: '과학 실험', done: false, time: 60 },
   ])
 
   const toggleItem = (id, list, setter) => {
@@ -1295,10 +1323,11 @@ export default function App(){
             )}
             <ul className="list">
               {workoutList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('근력/유산소', it.id)} style={{justifyContent:'space-between'}}>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('근력/유산소', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('근력/유산소', it.id)}}>삭제</button>
                   </span>
                 </li>
@@ -1329,10 +1358,11 @@ export default function App(){
             )}
             <ul className="list">
               {toeicList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('토익 RC/LC', it.id)} style={{justifyContent:'space-between'}}>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('토익 RC/LC', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
                   </span>
                 </li>
@@ -1363,10 +1393,11 @@ export default function App(){
             )}
             <ul className="list">
               {englishConversationList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('영어 회화', it.id)} style={{justifyContent:'space-between'}}>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('영어 회화', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('영어 회화', it.id)}}>삭제</button>
                   </span>
                 </li>
@@ -1397,10 +1428,11 @@ export default function App(){
             )}
             <ul className="list">
               {studyList.map(it=> (
-                <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleTodo('study', it.id)} style={{justifyContent:'space-between'}}>
+                <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('study', it.id)} onClick={e=>e.stopPropagation()} />
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('study', it.id)}}>삭제</button>
                   </span>
                 </li>
@@ -1437,10 +1469,11 @@ export default function App(){
                 )}
                 <ul className="list">
                   {list.map(it => (
-                    <li key={it.id} className={'item ' + (it.done?'strike':'')} onClick={()=>toggleExtraTodo(cat.id, it.id)} style={{justifyContent:'space-between'}}>
+                    <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                       <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                       <span>
                         <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleExtraTodo(cat.id, it.id)} onClick={e=>e.stopPropagation()} />
+                        <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                         <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteExtraTodo(cat.id, it.id)}}>삭제</button>
                       </span>
                     </li>

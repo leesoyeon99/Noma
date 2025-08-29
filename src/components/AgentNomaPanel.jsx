@@ -204,7 +204,7 @@ export default function AgentNomaPanel({ onAccept, onClose, applyTarget }) {
           >
             <div className="card-content">
               <div className="mb-2" style={{ fontSize: 16, fontWeight: 600 }}>몇 가지만 더 알려주세요</div>
-              <div className="grid" style={{display:'grid', gridTemplateColumns:'1fr', gap:10}}>
+              <div className="grid" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
                 <div>
                   <div className="small" style={{marginBottom:6}}>분량/난이도</div>
                   <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
@@ -286,11 +286,7 @@ export default function AgentNomaPanel({ onAccept, onClose, applyTarget }) {
             <div className="card-content">
               <div className="mb-2" style={{ fontSize: 15, fontWeight: 600 }}>생성된 일정 (반영 미리보기)</div>
               {error && <div className="mb-2 small" style={{ color:'#dc2626' }}>{error}</div>}
-              <ul className="list mb-2" style={{
-                display:'grid',
-                gridTemplateColumns:'1fr 1fr',
-                gap:10
-              }}>
+              <ul className="list mb-2">
                 {results.length === 0 && (
                   <li className="item" style={{ border:'1px solid #e2e8f0', borderRadius:8, padding:10 }}>결과가 없습니다.</li>
                 )}
@@ -303,13 +299,22 @@ export default function AgentNomaPanel({ onAccept, onClose, applyTarget }) {
                   const category = inferCategoryFromLabel(label)
                   const dateLabel = applyTarget?.dateLabel || '선택 날짜'
                   return (
-                    <li key={idx} className="item" style={{ border:'1px solid #e2e8f0', borderRadius:8, padding:10, alignItems:'flex-start' }}>
-                      <div style={{fontWeight:600}}>{label}</div>
-                      <div className="small" style={{color:'#475569', marginTop:4}}>
-                        소요시간: {minutes>0? `${minutes}분` : '미정'} · 시간대: {qa.timeOfDay || '미정'} · 마감: {qa.deadline || '미정'}
+                    <li key={idx} className="item" style={{ border:'1px solid #e2e8f0', borderRadius:10, padding:12, alignItems:'flex-start' }}>
+                      <div style={{fontWeight:700, lineHeight:1.4}}>{label}</div>
+                      <div style={{display:'flex', gap:6, flexWrap:'wrap', marginTop:6}}>
+                        <span className="chip">카테고리: {category}</span>
+                        <span className="chip">반영: {dateLabel}</span>
+                        {minutes>0 && <span className="chip">{minutes}분</span>}
                       </div>
-                      <div className="small" style={{color:'#64748b', marginTop:2}}>
-                        반영: {dateLabel} · 카테고리: {category}
+                      <div style={{marginTop:8, paddingTop:8, borderTop:'1px solid #f1f5f9', width:'100%'}}>
+                        <div style={{display:'grid', gridTemplateColumns:'88px 1fr', columnGap:10, rowGap:4}}>
+                          <div className="small" style={{color:'#64748b'}}>소요시간</div>
+                          <div className="small" style={{color:'#334155'}}>{minutes>0? `${minutes}분` : '미정'}</div>
+                          <div className="small" style={{color:'#64748b'}}>시간대</div>
+                          <div className="small" style={{color:'#334155'}}>{qa.timeOfDay || '미정'}</div>
+                          <div className="small" style={{color:'#64748b'}}>마감</div>
+                          <div className="small" style={{color:'#334155'}}>{qa.deadline || '미정'}</div>
+                        </div>
                       </div>
                     </li>
                   )

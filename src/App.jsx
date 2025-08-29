@@ -951,7 +951,8 @@ export default function App(){
                                 lower.includes('lc') || lower.includes('rc') || lower.includes('토익') ? 'toeic' :
                                 lower.includes('운동') || lower.includes('유산소') ? 'workout' : 'toeic'
                               )
-                              const newItem = { id: `${category}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`, label, done:false }
+                              const minutes = parseInt(it.timeMinutes || it.time || 0, 10) || 0
+                              const newItem = { id: `${category}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`, label, time: minutes, done:false }
                               if (category === 'workout') {
                                 setWorkoutTodosByDate(prev => ({
                                   ...prev,
@@ -1369,7 +1370,7 @@ export default function App(){
               {workoutList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
-                  <span>
+                  <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('근력/유산소', it.id)} onClick={e=>e.stopPropagation()} />
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('근력/유산소', it.id)}}>삭제</button>
@@ -1404,7 +1405,7 @@ export default function App(){
               {toeicList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
-                  <span>
+                  <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('토익 RC/LC', it.id)} onClick={e=>e.stopPropagation()} />
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
@@ -1439,7 +1440,7 @@ export default function App(){
               {englishConversationList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
-                  <span>
+                  <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('영어 회화', it.id)} onClick={e=>e.stopPropagation()} />
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('영어 회화', it.id)}}>삭제</button>
@@ -1474,7 +1475,7 @@ export default function App(){
               {studyList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                   <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
-                  <span>
+                  <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('study', it.id)} onClick={e=>e.stopPropagation()} />
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('study', it.id)}}>삭제</button>
@@ -1515,7 +1516,7 @@ export default function App(){
                   {list.map(it => (
                     <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
                       <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
-                      <span>
+                      <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                         <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleExtraTodo(cat.id, it.id)} onClick={e=>e.stopPropagation()} />
                         <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                         <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteExtraTodo(cat.id, it.id)}}>삭제</button>

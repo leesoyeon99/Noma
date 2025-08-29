@@ -87,12 +87,16 @@ h1,h2,h3{margin:0}
 .timeline-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px dashed #e2e8f0}
 .timeline-item:last-child{border-bottom:none}
 .coach-modal{position:fixed;right:80px;bottom:24px;z-index:50}
-.coach-modal-card{width:340px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.12);overflow:hidden}
+.coach-modal-card{width:560px;max-width:calc(100vw - 120px);max-height:80vh;display:flex;flex-direction:column;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.12);overflow:hidden}
 .coach-modal-header{display:flex;align-items:center;border-bottom:1px solid #f1f5f9}
 .coach-tab{flex:1;text-align:center;padding:10px;cursor:pointer;font-size:13px;color:#475569}
 .coach-tab.active{background:#0f172a;color:#fff}
 .coach-close{margin-left:auto;padding:0 10px;height:36px;border:none;background:transparent;cursor:pointer;color:#64748b}
-.coach-modal-content{padding:12px}
+.coach-modal-content{padding:12px;flex:1;overflow:auto}
+
+@media (max-width: 720px){
+  .coach-modal-card{width:calc(100vw - 48px)}
+}
 
 .noma{display:flex;flex-direction:column;gap:8px}
 .noma-messages{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:8px}

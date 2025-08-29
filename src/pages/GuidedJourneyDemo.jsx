@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import AppLayout from '../components/AppLayout'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
-import { Upload, CheckCircle2, AlertTriangle, FileText, BarChart2, Brain, Folder, Trash2 } from 'lucide-react'
+import { Upload, CheckCircle2, AlertTriangle, FileText, BarChart2, Brain, Folder, Trash2, RefreshCw } from 'lucide-react'
 
 // Lightweight UI helpers for this demo
 const Button = ({ children, variant = 'default', size = 'md', className = '', ...props }) => {
@@ -195,6 +195,43 @@ export default function GuidedJourneyDemo(){
         setExamOptions([r.label, ...r.alternatives.map(alt => alt.label)])
         setShowConfirmModal(true)
         log(`시험 자동 인식: ${r.label} (신뢰도 ${Math.round(r.confidence*100)}%)`)
+        
+        // 자동으로 모든 후속 단계 실행
+        setTimeout(async () => {
+          // 범위 확정
+          log(`범위 확정: ${(r.scope||[]).join(', ') || '(미정)'}`)
+          
+          // OCR 처리
+          const ocrResult = await apiProcessOCR()
+          setOcrInfo(ocrResult)
+          log(`OCR 완료: ${ocrResult.pages}p / ${ocrResult.questions}문항 / 필기감지=${ocrResult.notesDetected}`)
+          
+          // 진단 실행
+          const diagResult = await apiDiagnose()
+          setPrevDiag(diag)
+          const base = diagResult.accuracy
+          const boosted = Math.min(95, base + courseDone*3 + evidences.length*2)
+          const newDiag = { ...diagResult, accuracy: boosted }
+          if (prevDiag) {
+            const delta = boosted - (prevDiag.accuracy || base)
+            setImprovementNote({ before: prevDiag.accuracy, after: boosted, delta })
+          }
+          setDiag(newDiag)
+          log(`진단 완료: 점수 ${diagResult.score}, 정답률 ${diagResult.accuracy}%`)
+          
+          // 코칭 플랜 생성
+          const coachResult = await apiCoaching(r.scope||[])
+          setCoach(coachResult)
+          log(`코칭 플랜 생성: ${coachResult.plan.length}개 모듈`)
+          
+          // 파일 생성
+          const exportResult = await apiExport()
+          setExported(exportResult)
+          log('파일 생성 완료: report.pdf / note.md / quiz.pdf')
+          
+          log('🎉 원클릭 시험지 분석 완료! 모든 정보가 자동으로 채워졌습니다.')
+        }, 2000) // 2초 후 자동 실행
+        
         break }
       case 'scope':
         log(`범위 확정: ${(examInfo?.scope||[]).join(', ') || '(미정)'}`)
@@ -311,313 +348,334 @@ export default function GuidedJourneyDemo(){
               }}
             />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-4 gap-y-4 items-stretch">
-            {/* 좌: 업로드 */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-4 gap-y-4 items-stretch">
+            {/* 첫 번째 행: 업로드+인식, 시험지 분석, 코칭 제안 */}
+            {/* 업로드 + 인식 */}
             <Card className="col-span-1 h-full min-h-[260px]">
               <CardHeader>
-                <CardTitle>업로드</CardTitle>
+                <CardTitle>업로드 + 인식</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <input ref={fileInputRef} type="file" accept="image/*,.pdf,.txt,.md" multiple onChange={onFiles} style={{display:'none'}} />
-                <Button variant="outline" onClick={requestUpload}>
+                <Button variant="outline" onClick={requestUpload} className="w-full">
                   <Upload className="mr-2" size={16}/> PDF/이미지 업로드
                 </Button>
                 <div className="text-[11px] text-gray-500">텍스트(.txt/.md)도 업로드 가능해요.</div>
-                <div className="text-xs text-gray-600">최근 업로드</div>
-                <ul className="text-xs text-gray-700 list-disc list-inside">
+                
+                {/* 업로드된 파일 */}
+                <div className="text-xs text-gray-600">업로드된 파일</div>
+                <ul className="text-xs text-gray-700 space-y-1">
                   {(uploaded.length? uploaded : [
                     {name:'2025-08-20 중간고사.pdf'},
                     {name:'모의고사_07.png'},
-                  ]).slice(0,5).map((f,i)=>(
-                    <li key={i}>{f.name}</li>
+                  ]).slice(0,3).map((f,i)=>(
+                    <li key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                      <span className="flex-1">{f.name}</span>
+                      <button 
+                        className="text-red-500 hover:text-red-700 ml-2"
+                        onClick={() => {
+                          // 파일 삭제 로직
+                          if (uploaded.length > 0) {
+                            setUploaded(prev => prev.filter((_, index) => index !== i))
+                          }
+                        }}
+                        title="파일 삭제"
+                      >
+                        🗑️
+                      </button>
+                    </li>
                   ))}
                 </ul>
+                
+                {/* 인식 결과 표시 */}
+                {!examInfo && <div className="text-sm text-gray-500">업로드 후 원클릭으로 모든 분석을 자동 실행할 수 있습니다.</div>}
+                {examInfo && (
+                  <div className="text-sm">
+                    {(examInfo.confidence>=0.8)?
+                      <span className="inline-flex items-center gap-1 text-purple-700"><span>✔</span>자동 인식</span>
+                      :
+                      <span className="inline-flex items-center gap-1 text-amber-700"><span>!</span>확인 필요</span>
+                    }
+                    <span className="ml-2"><b>{examInfo.label}</b> · 신뢰도 {Math.round(examInfo.confidence*100)}%</span>
+                    {examInfo.scope?.length>0 && <span className="ml-2 text-gray-600">범위: {examInfo.scope.join(', ')}</span>}
+                  </div>
+                )}
+                
+                {/* 원클릭 분석 버튼 */}
+                <div className="mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    title="원클릭으로 모든 분석을 자동 실행합니다" 
+                    onClick={async()=>{ await runStep('identify') }}
+                    className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-300"
+                  >
+                    🚀 원클릭 전체 분석
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
-            {/* 중앙: 2x2 컨테이너 */}
-            <div className="col-span-1 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
-              {/* 인식 */}
-              <Card className="min-h-[260px]">
-                <CardHeader>
-                  <CardTitle>시험 자동 인식</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!examInfo && <div className="text-sm text-gray-500">업로드 후 자동 판별됩니다.</div>}
-                  {examInfo && (
-                    <div className="text-sm">
-                      {(examInfo.confidence>=0.8)?
-                        <span className="inline-flex items-center gap-1 text-purple-700"><span>✔</span>자동 인식</span>
-                        :
-                        <span className="inline-flex items-center gap-1 text-amber-700"><span>!</span>확인 필요</span>
-                      }
-                      <span className="ml-2"><b>{examInfo.label}</b> · 신뢰도 {Math.round(examInfo.confidence*100)}%</span>
-                      {examInfo.scope?.length>0 && <span className="ml-2 text-gray-600">범위: {examInfo.scope.join(', ')}</span>}
-                    </div>
-                  )}
-                  <div className="mt-3"><Button variant="outline" size="sm" title="헤더/로고/형식 등을 바탕으로 자동 판별" onClick={async()=>{ await runStep('identify') }}>시험 자동 인식</Button></div>
-                </CardContent>
-              </Card>
-
-              {/* 진단 */}
-              <Card className="min-h-[260px]">
-                <CardHeader>
-                  <CardTitle>진단 결과</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!diag && <div className="text-sm text-gray-500">OCR 처리 후 자동 분석됩니다.</div>}
-                  {diag && (
-                    <div className="space-y-3">
-                      {/* 점수 */}
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <div className="text-lg font-bold text-blue-800">
-                          점수: {diag.score}점 ({diag.correctAnswers}/{diag.totalQuestions})
-                        </div>
+            {/* 시험지 분석 */}
+            <Card className="col-span-1 h-full min-h-[260px]">
+              <CardHeader>
+                <CardTitle>시험지 분석</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!diag ? (
+                  <div className="text-sm text-gray-500">진단 완료 후 시험지 분석이 표시됩니다.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* 수와 연산 */}
+                    <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-blue-800">수와 연산</h5>
+                        <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                          {diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0}문제 오답
+                        </span>
                       </div>
-
-                      {/* 요약 코멘트 */}
-                      <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                        <h4 className="font-semibold text-green-800 mb-2">요약 코멘트</h4>
-                        <p className="text-sm text-green-700">{diag.summaryComment}</p>
+                      <div className="text-sm text-blue-700 mb-2">
+                        분수 나눗셈, 비와 비율 등
                       </div>
-
-                      {/* 세부 내용 보기 버튼 */}
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => setShowDiagnosisDetail(true)}
-                      >
-                        세부 내용 보기
-                      </Button>
-                    </div>
-                  )}
-                  <div className="mt-3"><Button size="sm" title="OCR 완료 후 점수/정답률/취약개념 계산" onClick={async()=>{ if(!ocrInfo){ await runStep('scope'); await runStep('ocr'); } await runStep('diagnose') }}>진단 실행</Button></div>
-                </CardContent>
-              </Card>
-
-              {/* 시험지 분석 */}
-              <Card className="min-h-[260px]">
-                <CardHeader>
-                  <CardTitle>시험지 분석</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!diag ? (
-                    <div className="text-sm text-gray-500">진단 완료 후 시험지 분석이 표시됩니다.</div>
-                  ) : (
-                    <div className="space-y-3">
-                      {/* 수와 연산 */}
-                      <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-blue-800">수와 연산</h5>
-                          <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            {diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0}문제 오답
-                          </span>
-                        </div>
-                        <div className="text-sm text-blue-700 mb-2">
-                          분수 나눗셈, 비와 비율 등
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-blue-600">
-                          <span>총 8문제</span>
-                          <span>•</span>
-                          <span>정답: {8 - (diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0)}문제</span>
-                        </div>
-                      </div>
-
-                      {/* 기하 */}
-                      <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-green-800">기하</h5>
-                          <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                            {diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0}문제 오답
-                          </span>
-                        </div>
-                        <div className="text-sm text-green-700 mb-2">
-                          도형의 성질, 각도 관계 등
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-green-600">
-                          <span>총 5문제</span>
-                          <span>•</span>
-                          <span>정답: {5 - (diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0)}문제</span>
-                        </div>
-                      </div>
-
-                      {/* 확률과 통계 */}
-                      <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-400">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-purple-800">확률과 통계</h5>
-                          <span className="text-sm text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                            {diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0}문제 오답
-                          </span>
-                        </div>
-                        <div className="text-sm text-purple-700 mb-2">
-                          확률 기초, 표본공간 등
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-purple-600">
-                          <span>총 4문제</span>
-                          <span>•</span>
-                          <span>정답: {4 - (diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0)}문제</span>
-                        </div>
-                      </div>
-
-                      {/* 문자와 식 */}
-                      <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-medium text-orange-800">문자와 식</h5>
-                          <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
-                            {diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0}문제 오답
-                          </span>
-                        </div>
-                        <div className="text-sm text-orange-700 mb-2">
-                          속력 공식, 단위 변환 등
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-orange-600">
-                          <span>총 3문제</span>
-                          <span>•</span>
-                          <span>정답: {3 - (diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0)}문제</span>
-                        </div>
+                      <div className="flex items-center gap-4 text-xs text-blue-600">
+                        <span>총 8문제</span>
+                        <span>•</span>
+                        <span>정답: {8 - (diag.weakConcepts.find(c => c.name === '분수 나눗셈')?.count || 0)}문제</span>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* 코칭 제안 */}
-              <Card className="min-h-[260px]">
-                <CardHeader>
-                  <CardTitle>코칭 제안</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {!coach && <div className="text-sm text-gray-500">진단 완료 후 플랜이 생성됩니다.</div>}
-                  {coach && (
-                    <div className="space-y-3">
-                      {/* 학습 범위 요약 */}
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <div className="text-sm font-medium text-blue-800 mb-2">📚 학습 범위</div>
-                        <div className="text-sm text-blue-700">
-                          {coach.scope?.map((item, idx) => (
-                            <div key={idx} className="mb-1">• {item}</div>
-                          ))}
-                        </div>
+                    {/* 기하 */}
+                    <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-green-800">기하</h5>
+                        <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                          {diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0}문제 오답
+                        </span>
                       </div>
-                      
-                      {/* 일정표 형태의 코칭 플랜 */}
-                      <div className="bg-white border rounded-lg overflow-hidden">
-                        <div className="bg-gray-50 px-4 py-2 border-b">
-                          <div className="text-sm font-medium text-gray-700">📅 일정표 형태 코칭 플랜</div>
-                        </div>
-                        <div className="p-0">
-                          <table className="w-full text-sm">
-                            <thead className="bg-gray-50">
-                              <tr className="border-b">
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">시간대</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">제목</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">설명</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">소요시간</th>
+                      <div className="text-sm text-green-700 mb-2">
+                        도형의 성질, 각도 관계 등
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-green-600">
+                        <span>총 5문제</span>
+                        <span>•</span>
+                        <span>정답: {5 - (diag.weakConcepts.find(c => c.name === '도형의 성질')?.count || 0)}문제</span>
+                      </div>
+                    </div>
+
+                    {/* 확률과 통계 */}
+                    <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-purple-800">확률과 통계</h5>
+                        <span className="text-sm text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                          {diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0}문제 오답
+                        </span>
+                      </div>
+                      <div className="text-sm text-purple-700 mb-2">
+                        확률 기초, 표본공간 등
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-purple-600">
+                        <span>총 4문제</span>
+                        <span>•</span>
+                        <span>정답: {4 - (diag.weakConcepts.find(c => c.name === '확률 기초')?.count || 0)}문제</span>
+                      </div>
+                    </div>
+
+                    {/* 문자와 식 */}
+                    <div className="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-orange-800">문자와 식</h5>
+                        <span className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                          {diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0}문제 오답
+                        </span>
+                      </div>
+                      <div className="text-sm text-orange-700 mb-2">
+                        속력 공식, 단위 변환 등
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-orange-600">
+                        <span>총 3문제</span>
+                        <span>•</span>
+                        <span>정답: {3 - (diag.weakConcepts.find(c => c.name === '속력 공식')?.count || 0)}문제</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* 코칭 제안 */}
+            <Card className="col-span-1 h-full min-h-[260px]">
+              <CardHeader>
+                <CardTitle>코칭 제안</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!coach && <div className="text-sm text-gray-500">진단 완료 후 플랜이 생성됩니다.</div>}
+                {coach && (
+                  <div className="space-y-3">
+                    {/* 학습 범위 요약 */}
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800 mb-2">📚 학습 범위</div>
+                      <div className="text-sm text-blue-700">
+                        {coach.scope?.map((item, idx) => (
+                          <div key={idx} className="mb-1">• {item}</div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 일정표 형태의 코칭 플랜 */}
+                    <div className="bg-white border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-4 py-2 border-b">
+                        <div className="text-sm font-medium text-gray-700">📅 일정표 형태 코칭 플랜</div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="text-sm" style={{minWidth: '500px'}}>
+                          <thead className="bg-gray-50">
+                            <tr className="border-b">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600" style={{width: '80px', whiteSpace: 'nowrap'}}>시간대</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600" style={{width: '120px', whiteSpace: 'nowrap'}}>제목</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600" style={{width: '200px', whiteSpace: 'nowrap'}}>설명</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600" style={{width: '80px', whiteSpace: 'nowrap'}}>소요시간</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {coach.plan.map((p, idx) => (
+                              <tr key={idx} className="border-b hover:bg-gray-50">
+                                <td className="px-3 py-2 text-xs text-gray-600" style={{whiteSpace: 'nowrap'}}>
+                                  {p.scheduledTime || '자동'}
+                                </td>
+                                <td className="px-3 py-2 font-medium text-gray-800" style={{whiteSpace: 'nowrap'}}>
+                                  {p.title}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-600" style={{whiteSpace: 'nowrap'}}>
+                                  {p.details}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-600" style={{whiteSpace: 'nowrap'}}>
+                                  {p.time}
+                                </td>
                               </tr>
-                            </thead>
-                            <tbody>
-                              {coach.plan.map((p, idx) => (
-                                <tr key={idx} className="border-b hover:bg-gray-50">
-                                  <td className="px-3 py-2 text-xs text-gray-600">
-                                    {p.scheduledTime || '자동 배치'}
-                                  </td>
-                                  <td className="px-3 py-2 font-medium text-gray-800">
-                                    {p.title}
-                                  </td>
-                                  <td className="px-3 py-2 text-xs text-gray-600">
-                                    {p.details}
-                                  </td>
-                                  <td className="px-3 py-2 text-xs text-gray-600">
-                                    {p.time}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      
-                      {/* 일정 반영 옵션 */}
-                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                        <div className="text-sm font-medium text-green-800 mb-2">⚙️ 일정 반영 설정</div>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <label className="block text-green-700 mb-1">주간 반복 횟수</label>
-                            <select className="w-full p-1 border rounded text-xs">
-                              <option>1회</option>
-                              <option>2회</option>
-                              <option>3회</option>
-                              <option>4회</option>
-                              <option>5회</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-green-700 mb-1">진행 기간</label>
-                            <select className="w-full p-1 border rounded text-xs">
-                              <option>1주</option>
-                              <option>2주</option>
-                              <option>3주</option>
-                              <option>4주</option>
-                            </select>
-                          </div>
+                    </div>
+                    
+                    {/* 일정 반영 옵션 */}
+                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                      <div className="text-sm font-medium text-green-800 mb-2">⚙️ 일정 반영 설정</div>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="block text-green-700 mb-1">주간 반복 횟수</label>
+                          <select className="w-full p-1 border rounded text-xs">
+                            <option>1회</option>
+                            <option>2회</option>
+                            <option>3회</option>
+                            <option>4회</option>
+                            <option>5회</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-green-700 mb-1">진행 기간</label>
+                          <select className="w-full p-1 border rounded text-xs">
+                            <option>1주</option>
+                            <option>2주</option>
+                            <option>3주</option>
+                            <option>4주</option>
+                          </select>
                         </div>
                       </div>
                     </div>
-                  )}
-                  <div className="mt-3 flex gap-2">
-                    <Button 
-                      onClick={async()=>{ 
-                        await runStep('coach') 
-                      }} 
-                      title="취약 개념 보완 코스 구성"
-                      className="flex-1"
-                    >
-                      코칭 플랜 생성
-                    </Button>
+                  </div>
+                )}
+                <div className="mt-3">
+                  <div className="text-xs text-gray-500 text-center py-2">
+                    🎯 시험 자동 인식 버튼을 누르면 자동으로 생성됩니다
+                  </div>
+                </div>
+                
+                {/* 일정에 바로 반영 버튼 */}
+                {coach && (
+                  <Button 
+                    onClick={() => {
+                      // 일정표에 코칭 플랜 반영 로직
+                      alert('코칭 플랜이 일정표에 반영되었습니다! 📅')
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    📅 일정표에 바로 반영
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 두 번째 행: 진단 결과, 내보내기 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-4 items-stretch mt-4">
+            {/* 진단 결과 */}
+            <Card className="col-span-1 h-full min-h-[260px]">
+              <CardHeader>
+                <CardTitle>진단 결과</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!diag && <div className="text-sm text-gray-500">OCR 처리 후 자동 분석됩니다.</div>}
+                {diag && (
+                  <div className="space-y-3">
+                    {/* 점수 */}
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="text-lg font-bold text-blue-800">
+                        점수: {diag.score}점 ({diag.correctAnswers}/{diag.totalQuestions})
+                      </div>
+                    </div>
+
+                    {/* 요약 코멘트 */}
+                    <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                      <h4 className="font-semibold text-green-800 mb-2">요약 코멘트</h4>
+                      <p className="text-sm text-green-700">{diag.summaryComment}</p>
+                    </div>
+
+                    {/* 세부 내용 보기 버튼 */}
                     <Button 
                       variant="outline" 
-                      onClick={async()=>{ 
-                        await runStep('coach'); 
-                        await runStep('export'); 
-                        setCurrent('handoff') 
-                      }} 
-                      title="PDF/요약노트/보완문제 생성"
-                      className="flex-1"
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => setShowDiagnosisDetail(true)}
                     >
-                      파일 생성
+                      세부 내용 보기
                     </Button>
                   </div>
-                  
-                  {/* 일정에 바로 반영 버튼 */}
-                  {coach && (
-                    <Button 
-                      onClick={() => {
-                        // 일정표에 코칭 플랜 반영 로직
-                        alert('코칭 플랜이 일정표에 반영되었습니다! 📅')
-                      }}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      📅 일정표에 바로 반영
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                )}
+                <div className="mt-3">
+                  <div className="text-xs text-gray-500 text-center">
+                    🎯 시험 자동 인식 버튼을 누르면 자동으로 실행됩니다
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* 우: 내보내기 */}
+            {/* 내보내기 */}
             <Card className="col-span-1 h-full min-h-[260px]">
               <CardHeader>
                 <CardTitle>내보내기</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf-report' } }))}><FileText className="mr-2" size={16}/> PDF 리포트</Button>
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note' } }))}><FileText className="mr-2" size={16}/> 오답노트</Button>
-                <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'supplementary-quiz' } }))}><FileText className="mr-2" size={16}/> 보충문제</Button>
+                {!exported ? (
+                  <div className="text-xs text-gray-500 text-center py-2">
+                    🎯 시험 자동 인식 버튼을 누르면 자동으로 생성됩니다
+                  </div>
+                ) : (
+                  <>
+                    <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf-report' } }))}>
+                      <FileText className="mr-2" size={16}/> PDF 리포트
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note' } }))}>
+                      <FileText className="mr-2" size={16}/> 오답노트
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'supplementary-quiz' } }))}>
+                      <FileText className="mr-2" size={16}/> 보충문제
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
-
 
         </TabsContent>
 
@@ -843,8 +901,13 @@ export default function GuidedJourneyDemo(){
       {showDiagnosisDetail && diag && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">진단 세부 분석 결과</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">진단 세부 분석 결과</h3>
+                <p className="text-gray-600 text-sm">
+                  사용자의 시험지와 필기 내용을 AI가 분석한 상세한 진단 정보입니다. 주요 오답 개념, 문항별 분석, 전체 개념 범위, AI 진단 분석을 확인할 수 있습니다.
+                </p>
+              </div>
               <button 
                 onClick={() => setShowDiagnosisDetail(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -853,9 +916,10 @@ export default function GuidedJourneyDemo(){
               </button>
             </div>
 
+            {/* 새로운 레이아웃 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* 왼쪽 컬럼 */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* 주요 오답 개념 */}
                 <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
                   <h4 className="font-semibold text-red-800 mb-3 text-lg">주요 오답 개념</h4>
@@ -874,62 +938,23 @@ export default function GuidedJourneyDemo(){
                   </div>
                 </div>
 
-                {/* 잘못 이해한 부분 */}
-                <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h4 className="font-semibold text-yellow-800 text-lg">잘못 이해한 부분</h4>
-                    <div className="relative group">
-                      <span className="text-yellow-600 cursor-help">ⓘ</span>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                        AI가 사용자의 필기와 메모를 분석하여 이해하지 못한 개념을 파악했습니다
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    {diag.handwritingNotes.map((note, idx) => (
-                      <div key={idx} className="bg-white p-4 rounded border">
-                        <div className="grid grid-cols-1 gap-3">
-                          {/* 개념명과 사용자 필기 */}
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="font-medium text-yellow-800 mb-1">{note.concept}</div>
-                              <div className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
-                                사용자 필기: "{note.userNote}"
-                              </div>
-                            </div>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              note.type === 'confusion' ? 'bg-red-100 text-red-600' :
-                              note.type === 'difficulty' ? 'bg-orange-100 text-orange-600' :
-                              'bg-blue-100 text-blue-600'
-                            }`}>
-                              {note.type === 'confusion' ? '혼란' : 
-                               note.type === 'difficulty' ? '어려움' : '질문'}
-                            </span>
-                          </div>
-                          
-                          {/* AI 분석 */}
-                          <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                            <div className="text-sm font-medium text-blue-800 mb-1">AI 분석</div>
-                            <div className="text-sm text-blue-700">{note.aiAnalysis}</div>
-                          </div>
-                          
-                          {/* AI 해설 */}
-                          <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
-                            <div className="text-sm font-medium text-green-800 mb-1">AI 해설</div>
-                            <div className="text-sm text-green-700">{note.aiExplanation}</div>
-                          </div>
-                        </div>
+                {/* 문항별 상세 분석 */}
+                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                  <h4 className="font-semibold text-green-800 mb-3 text-lg">문항별 상세 분석</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {diag.mistakes.map((mistake, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border text-sm">
+                        <span className="font-medium text-green-800">#{mistake.num}</span>
+                        <span className="text-green-700 ml-2">{mistake.text}</span>
+                        <div className="text-xs text-green-600 mt-1">{mistake.note}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
 
-              {/* 오른쪽 컬럼 */}
-              <div className="space-y-6">
-                {/* 문제들이 다루는 전체 개념 */}
+                {/* 전체 개념 */}
                 <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                  <h4 className="font-semibold text-blue-800 mb-3 text-lg">문제들이 다루는 전체 개념</h4>
+                  <h4 className="font-semibold text-blue-800 mb-3 text-lg">전체 개념</h4>
                   <div className="flex flex-wrap gap-2">
                     {diag.coveredConcepts.map((concept, idx) => (
                       <span key={idx} className="bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm font-medium">
@@ -956,16 +981,52 @@ export default function GuidedJourneyDemo(){
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* 문항별 상세 분석 */}
-                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
-                  <h4 className="font-semibold text-green-800 mb-3 text-lg">문항별 상세 분석</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {diag.mistakes.map((mistake, idx) => (
-                      <div key={idx} className="bg-white p-2 rounded border text-sm">
-                        <span className="font-medium text-green-800">#{mistake.num}</span>
-                        <span className="text-green-700 ml-2">{mistake.text}</span>
-                        <div className="text-xs text-green-600 mt-1">{mistake.note}</div>
+              {/* 오른쪽 컬럼 */}
+              <div className="space-y-4">
+                {/* 잘못 이해한 부분 */}
+                <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                  <div className="mb-3">
+                    <h4 className="font-semibold text-yellow-800 text-lg mb-2">잘못 이해한 부분</h4>
+                    <p className="text-sm text-yellow-700 bg-yellow-100 px-3 py-2 rounded">
+                      AI가 사용자의 필기와 메모를 분석하여 이해하지 못한 개념을 파악했습니다
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    {diag.handwritingNotes.map((note, idx) => (
+                      <div key={idx} className="bg-white p-3 rounded border">
+                        <div className="space-y-2">
+                          {/* 개념명과 사용자 필기 */}
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-medium text-yellow-800 mb-1">{note.concept}</div>
+                              <div className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                                사용자 필기: "{note.userNote}"
+                              </div>
+                            </div>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              note.type === 'confusion' ? 'bg-red-100 text-red-600' :
+                              note.type === 'difficulty' ? 'bg-orange-100 text-orange-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {note.type === 'confusion' ? '혼란' : 
+                               note.type === 'difficulty' ? '어려움' : '질문'}
+                            </span>
+                          </div>
+                          
+                          {/* AI 분석 */}
+                          <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
+                            <div className="text-sm font-medium text-blue-800 mb-1">AI 분석</div>
+                            <div className="text-sm text-blue-700">{note.aiAnalysis}</div>
+                          </div>
+                          
+                          {/* AI 해설 */}
+                          <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
+                            <div className="text-sm font-medium text-green-800 mb-1">AI 해설</div>
+                            <div className="text-sm text-green-700">{note.aiExplanation}</div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -973,7 +1034,18 @@ export default function GuidedJourneyDemo(){
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between items-center">
+              <Button 
+                variant="outline" 
+                className="bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200"
+                onClick={() => {
+                  // 오답노트 생성 로직
+                  console.log('오답노트 생성')
+                  // TODO: 실제 오답노트 생성 기능 구현
+                }}
+              >
+                📝 오답노트 생성
+              </Button>
               <Button onClick={() => setShowDiagnosisDetail(false)}>
                 닫기
               </Button>
@@ -1025,5 +1097,6 @@ function ChatArea({ Button, warmSuggestion, onCreateFile, onCompleteMicroCourse,
     </div>
   )
 }
+
 
 

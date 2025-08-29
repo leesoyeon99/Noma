@@ -139,6 +139,7 @@ export default function App(){
   const [nomaInput, setNomaInput] = useState('')
   const [suggestions, setSuggestions] = useState(INIT_SUGGESTIONS)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(new Date()) // 월간 대시보드용 선택된 월
   const [workoutTodosByDate, setWorkoutTodosByDate] = useState({})
   const [toeicTodosByDate, setToeicTodosByDate] = useState({})
   const [englishConversationTodosByDate, setEnglishConversationTodosByDate] = useState({})
@@ -146,7 +147,7 @@ export default function App(){
   const [showAddInput, setShowAddInput] = useState({ workout:false, toeic:false, englishConversation:false, study:false })
   const [newTodoText, setNewTodoText] = useState('')
   const [extraCategories, setExtraCategories] = useState([])
-  const [extraTodosByDate, setExtraTodosByDate] = useState({}) // { [catId]: { [dateKey]: Todo[] } }
+  const [extraTodosByDate, setExtraTodosByDate] = useState({}) // { [catId]: { [catId]: Todo[] } }
   const [showAddCategory, setShowAddCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [showAddInputExtra, setShowAddInputExtra] = useState({}) // { [catId]: bool }
@@ -556,7 +557,13 @@ export default function App(){
     setNewCategoryName('')
   }
 
-  const getExtraList = (catId) => (extraTodosByDate[catId]?.[selectedDateKey]) ?? []
+  const getExtraList = (catId) => {
+    if (catId === '근력/유산소') return workoutTodosByDate[selectedDateKey] ?? []
+    if (catId === '토익 RC/LC') return toeicTodosByDate[selectedDateKey] ?? []
+    if (catId === '영어 회화') return englishConversationTodosByDate[selectedDateKey] ?? []
+    if (catId === 'study') return studyTodosByDate[selectedDateKey] ?? []
+    return (extraTodosByDate[catId]?.[selectedDateKey]) ?? []
+  }
 
   const addExtraTodo = (catId) => {
     const text = (newTodoTextExtra[catId] || '').trim()
@@ -1000,8 +1007,37 @@ export default function App(){
           </div>
         ) : activeView === 'insight' ? (
           <div style={{paddingRight:16}}>
-            <div className="row mb-4">
-              <h1 className="title">카테고리별 진도관리 대시보드</h1>
+            <div className="row mb-4" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+              <h1 className="title">월간 대시보드</h1>
+              
+              {/* 월별 페이지네이션 */}
+              <div className="flex items-center gap-3">
+                <button 
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const newDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1)
+                    setSelectedMonth(newDate)
+                  }}
+                  disabled={selectedMonth.getMonth() === 0 && selectedMonth.getFullYear() === 2020}
+                >
+                  ←
+                </button>
+                
+                <div className="text-lg font-semibold text-gray-800">
+                  {selectedMonth.getFullYear()}년 {selectedMonth.getMonth() + 1}월
+                </div>
+                
+                <button 
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const newDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1)
+                    setSelectedMonth(newDate)
+                  }}
+                  disabled={selectedMonth.getMonth() === 11 && selectedMonth.getFullYear() === 2030}
+                >
+                  →
+                </button>
+              </div>
             </div>
 
             <div className="kpi-grid">
@@ -1055,8 +1091,10 @@ export default function App(){
                       <div>카테고리</div><div>목표</div><div>진도(시간)</div><div>완료시간</div><div>상태</div>
                     </div>
                     {[
-                      { category: '운동', list: workoutList },
-                      { category: '토익', list: toeicList },
+                      { category: '근력/유산소', list: workoutList },
+                      { category: '토익 RC/LC', list: toeicList },
+                      { category: '영어 회화', list: getExtraList('영어 회화') },
+                      { category: 'study', list: getExtraList('study') },
                       ...extraCategories.map(cat => ({
                         category: cat.name,
                         list: getExtraList(cat.id)
@@ -1101,8 +1139,10 @@ export default function App(){
                   <ul className="insight-list">
                     {(() => {
                       const categories = [
-                        { name: '운동', list: workoutList },
-                        { name: '토익', list: toeicList },
+                        { name: '근력/유산소', list: workoutList },
+                        { name: '토익 RC/LC', list: toeicList },
+                        { name: '영어 회화', list: getExtraList('영어 회화') },
+                        { name: 'study', list: getExtraList('study') },
                         ...extraCategories.map(cat => ({
                           name: cat.name,
                           list: getExtraList(cat.id)

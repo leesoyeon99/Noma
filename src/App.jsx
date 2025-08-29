@@ -84,13 +84,13 @@ const Checklist = ({ items, onToggle, onEdit, onDelete }) => (
         className={'item ' + (it.done ? 'strike' : '')}
       >
         <div className="flex items-center gap-2 flex-1">
-          <input
-            type="checkbox"
-            className="checkbox"
-            checked={it.done}
-            onChange={() => onToggle(it.id)}
-            onClick={(e)=>e.stopPropagation()}
-          />
+        <input
+          type="checkbox"
+          className="checkbox"
+          checked={it.done}
+          onChange={() => onToggle(it.id)}
+          onClick={(e)=>e.stopPropagation()}
+        />
           <span className="flex-1">{it.label}</span>
           {it.time && (
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -752,11 +752,11 @@ export default function App(){
                       </span>
                       noma
                     </h2>
-                            <nav className="nav">
+        <nav className="nav">
                       <p className={activeView==='home' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('home')}>Home/Calendar</p>
                       <p className={activeView==='journey' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('journey')}>NOMA lab</p>
                       <p className={activeView==='insight' ? 'bold nav-link active' : 'nav-link'} onClick={()=>setActiveView('insight')}>Insights</p>
-                    </nav>
+        </nav>
         <div style={{marginTop: 24}}>
           <Card>
             <CardHeader>
@@ -1188,7 +1188,7 @@ export default function App(){
                                 → 계획된 시간 대비 실제 완료된 시간을 기준으로 진도를 측정합니다.
                               </div>
                             </div>
-                          </li>
+                    </li>
 
                           {/* 가장 낮은 카테고리 */}
                           <li className="mb-4">
@@ -1538,11 +1538,11 @@ export default function App(){
               }
             </h2>
           </div>
-          <Card className="mb-3">
-            <CardHeader>
+        <Card className="mb-3">
+          <CardHeader>
               <CardTitle>미리보기</CardTitle>
-            </CardHeader>
-            <CardContent>
+          </CardHeader>
+          <CardContent>
               {rightPanel.type === 'pdf-report' && (
                 <div className="small">
                   <p><b>PDF 리포트 미리보기</b></p>
@@ -1622,10 +1622,10 @@ export default function App(){
                       <p className="text-sm text-yellow-700">모든 문제에 상세한 해설 포함</p>
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
           {rightPanel.type === 'pdf-report' && (
             <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">

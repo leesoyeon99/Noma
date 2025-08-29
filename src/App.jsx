@@ -1167,9 +1167,38 @@ export default function App(){
                       
                       const totalCompletedTime = timeBasedCategories.reduce((sum, cat) => sum + cat.completedTime, 0)
                       const totalPlannedTime = timeBasedCategories.reduce((sum, cat) => sum + cat.totalTime, 0)
+                      const totalItemCount = timeBasedCategories.reduce((sum, cat) => sum + cat.list.length, 0)
+                      const totalDoneCount = timeBasedCategories.reduce((sum, cat) => sum + cat.list.filter(item => item.done).length, 0)
+                      const lowestDoneCount = (lowestCategory.list || []).filter(item => item.done).length
+                      const lowestTotalCount = (lowestCategory.list || []).length
                       
                       return (
                         <>
+                          {/* 카테고리 요약 (시간/개수) */}
+                          <li className="mb-4">
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-gray-700">📊</span>
+                                <span className="font-semibold text-gray-800">카테고리 요약 (시간/개수)</span>
+                              </div>
+                              <div className="table-like" style={{display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr', gap:8}}>
+                                <div className="small" style={{color:'#64748b'}}>카테고리</div>
+                                <div className="small" style={{color:'#64748b'}}>시간</div>
+                                <div className="small" style={{color:'#64748b'}}>개수</div>
+                                {timeBasedCategories.map(cat => {
+                                  const totalCount = cat.list.length
+                                  const doneCount = cat.list.filter(item => item.done).length
+                                  return (
+                                    <React.Fragment key={cat.name}>
+                                      <div className="t-cell name">{cat.name}</div>
+                                      <div className="t-cell small">{cat.completedTime}분 / {cat.totalTime}분</div>
+                                      <div className="t-cell small">{doneCount} / {totalCount}</div>
+                                    </React.Fragment>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          </li>
                           {/* 시간 기준 진도율 */}
                           <li className="mb-4">
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -1190,10 +1219,13 @@ export default function App(){
                                 ></div>
                               </div>
                               <div className="text-xs text-blue-600 mt-2">
+                                개수 기준: {totalDoneCount}개 / {totalItemCount}개 ({Math.round((totalDoneCount/Math.max(1,totalItemCount))*100)}% 완료)
+                              </div>
+                              <div className="text-xs text-blue-600 mt-2">
                                 → 계획된 시간 대비 실제 완료된 시간을 기준으로 진도를 측정합니다.
                               </div>
                             </div>
-                    </li>
+                          </li>
 
                           {/* 가장 낮은 카테고리 */}
                           <li className="mb-4">
@@ -1207,6 +1239,9 @@ export default function App(){
                               </div>
                               <div className="text-sm text-amber-700 mb-2">
                                 {lowestCategory.totalTime}분 중 {lowestCategory.completedTime}분 완료
+                              </div>
+                              <div className="text-xs text-amber-700 mb-2">
+                                개수: {lowestDoneCount} / {lowestTotalCount}
                               </div>
                               <div className="text-xs text-amber-600">
                                 → 단기 테스크(10~15분)를 정해 꾸준히 수행하는 습관을 들이세요.

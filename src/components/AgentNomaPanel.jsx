@@ -2,11 +2,17 @@ import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function AgentNomaPanel({ onAccept, onClose }) {
-  const [step, setStep] = useState('form') // 'form' | 'loading' | 'result'
+  const [step, setStep] = useState('form') // 'form' | 'qa' | 'loading' | 'result'
   const [voiceActive, setVoiceActive] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [results, setResults] = useState([]) // [{category, label, time?}]
   const [error, setError] = useState('')
+  const [qa, setQa] = useState({
+    amount: '', // 분량/난이도
+    deadline: '', // 언제까지
+    timeOfDay: '', // 어느 시간대
+    duration: '' // 몇 분 정도
+  })
   const recognitionRef = useRef(null)
 
   const ensureRecognition = () => {
@@ -102,7 +108,8 @@ export default function AgentNomaPanel({ onAccept, onClose }) {
     setError('')
     setStep('loading')
     try {
-      const r = await callLLM(prompt || '토익 고득점 계획')
+      const enriched = `${prompt}\n요구사항: 분량=${qa.amount||'보통'}, 마감=${qa.deadline||'이번 주'}, 시간대=${qa.timeOfDay||'오전'}, 소요시간=${qa.duration||'25분'}`
+      const r = await callLLM(enriched || '토익 고득점 계획')
       const items = Array.isArray(r?.items) ? r.items : []
       setResults(items)
       setStep('result')
@@ -135,6 +142,8 @@ export default function AgentNomaPanel({ onAccept, onClose }) {
                 style={{ width:'100%', border:'1px solid #e2e8f0', borderRadius:8, padding:10, resize:'none' }}
               />
 
+              <div className="small" style={{color:'#64748b', marginTop:8}}>전송 후 NOMA가 세부 질문을 추가로 드려요: 분량, 마감, 시간대, 소요시간 등</div>
+
               <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
                 <button className={`btn ${voiceActive ? 'btn-dark' : ''}`} onClick={toggleVoice}>
                   {voiceActive ? '음성 인식 중지' : '음성 인식 시작'}
@@ -143,7 +152,32 @@ export default function AgentNomaPanel({ onAccept, onClose }) {
               </div>
 
               <div style={{ marginTop:12 }}>
-                <button className="btn btn-dark" style={{ width:'100%' }} onClick={generate}>전송</button>
+                <button className="btn btn-dark" style={{ width:'100%' }} onClick={()=>setStep('qa')}>전송</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'qa' && (
+          <motion.div
+            key="qa"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+            className="card"
+          >
+            <div className="card-content">
+              <div className="mb-2" style={{ fontSize: 16, fontWeight: 600 }}>몇 가지만 더 알려주세요</div>
+              <div className="grid" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
+                <input className="input" placeholder="분량/난이도 (예: 보통)" value={qa.amount} onChange={e=>setQa(prev=>({...prev, amount: e.target.value}))} />
+                <input className="input" placeholder="언제까지? (예: 이번 주)" value={qa.deadline} onChange={e=>setQa(prev=>({...prev, deadline: e.target.value}))} />
+                <input className="input" placeholder="어느 시간대? (예: 오전)" value={qa.timeOfDay} onChange={e=>setQa(prev=>({...prev, timeOfDay: e.target.value}))} />
+                <input className="input" placeholder="몇 분 정도? (예: 25분)" value={qa.duration} onChange={e=>setQa(prev=>({...prev, duration: e.target.value}))} />
+              </div>
+              <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:12 }}>
+                <button className="btn" onClick={()=>setStep('form')}>이전</button>
+                <button className="btn btn-dark" onClick={generate}>추천 일정 생성</button>
               </div>
             </div>
           </motion.div>

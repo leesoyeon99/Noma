@@ -926,7 +926,7 @@ export default function App(){
                 <div className="coach-modal-card">
                   <div className="coach-modal-header">
                     <div className={coachTab==='coaching' ? 'coach-tab active' : 'coach-tab'} onClick={()=>setCoachTab('coaching')}>오늘의 코칭</div>
-                    <div className={coachTab==='noma' ? 'coach-tab active' : 'coach-tab'} onClick={()=>setCoachTab('noma')}>NOMA LLM</div>
+                    <div className={coachTab==='noma' ? 'coach-tab active' : 'coach-tab'} onClick={()=>setCoachTab('noma')}>AI 일정등록</div>
                     <button className="coach-close" aria-label="닫기" onClick={()=>setShowCoaching(false)}>✕</button>
                   </div>
                   <div className="coach-modal-content">
@@ -973,6 +973,10 @@ export default function App(){
                                 }))
                               }
                             })
+                            // 추천 일정 생성 후 홈 캘린더 표시 강조 UX
+                            setActiveView('home')
+                            setShowRightAside(true)
+                            addTimelineEntry('AI 일정 등록 완료: 추천 일정이 캘린더에 반영되었습니다.')
                           }catch(e){/* noop */}
                         }}
                       />

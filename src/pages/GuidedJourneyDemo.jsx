@@ -1111,10 +1111,7 @@ function ChatArea({ Button, warmSuggestion, onCreateFile, onCompleteMicroCourse,
 
   return (
     <div className="flex-1 flex flex-col bg-white rounded-xl shadow p-4" style={{height: 420}}>
-      <div className="flex items-center gap-2 mb-3 text-xs">
-        <Button variant="outline" onClick={()=>{ const name = `note-${new Date().toISOString().slice(11,19)}.md`; onCreateFile && onCreateFile(name); setMessages(ms=>[...ms,{role:'assistant', text:`파일 생성됨: ${name} (세션 Evidence 반영)`}]) }}>노트 파일 생성</Button>
-        <Button variant="outline" onClick={()=>{ onCompleteMicroCourse && onCompleteMicroCourse(); setMessages(ms=>[...ms,{role:'assistant', text:'마이크로 코스 1개 완료로 기록했습니다.'}]) }}>코스 완료 체크</Button>
-      </div>
+      
       <div className="flex-1 overflow-y-auto space-y-3">
         {messages.map((m,i)=> (
           <div key={i} className={`${m.role==='assistant'?'bg-purple-100':'bg-blue-100 ml-auto'} p-2 rounded-lg max-w-md`}>{m.text}</div>

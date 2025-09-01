@@ -771,10 +771,37 @@ export default function GuidedJourneyDemo(){
                     <div className="text-[12px] text-gray-600 mb-1">첨부된 파일</div>
                     <ul className="list-disc list-inside">
                       {(evidences.length? evidences : [
-                        {name: '(AI) 0828 요약노트'},
-                        {name: '(AI) 0828 리포트'},
-                        {name: '(AI) 0828 보완문제'}
-                      ]).slice(0,5).map((f,i)=>(<li key={i}>{f.name}</li>))}
+                        {name: '0828 요약노트', source: 'ai', type: 'summary'},
+                        {name: '0828 리포트', source: 'ai', type: 'report'},
+                        {name: '0828 보완문제', source: 'ai', type: 'problems'},
+                        {name: '수학 교재 Chapter 3', source: 'material', type: 'pdf'},
+                        {name: '기출문제집 2024', source: 'material', type: 'pdf'}
+                      ]).slice(0,5).map((f,i)=>(
+                        <li key={i} className="flex items-center gap-2">
+                          {f.source === 'ai' ? (
+                            <span 
+                              className="inline-flex items-center gap-1 cursor-pointer"
+                              onClick={() => {
+                                const rightPanel = document.querySelector('[data-right-panel]');
+                                if (rightPanel) {
+                                  rightPanel.style.display = 'block';
+                                  window.dispatchEvent(new CustomEvent('open-right-panel', { 
+                                    detail: { type: f.type || 'pdf-report' } 
+                                  }));
+                                }
+                              }}
+                            >
+                              <span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">AI</span>
+                              <span>{f.name}</span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <span className="px-1 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">📄</span>
+                              <span>{f.name}</span>
+                            </span>
+                          )}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </CardContent>

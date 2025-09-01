@@ -326,6 +326,16 @@ export default function GuidedJourneyDemo(){
       const add = newFiles.filter(f=>!names.has(f.name))
       return add.length ? [...add, ...prev] : prev
     })
+
+    // 홈/캘린더 Todo 자동 배정을 위한 이벤트 발행
+    try {
+      const items = [
+        { label: `(AI) ${tag} PDF 리포트`, panelType: 'pdf-report', artifactType: 'pdf-report' },
+        { label: `(AI) ${tag} 오답노트`, panelType: 'wrong-note', artifactType: 'wrong-note' },
+        { label: `(AI) ${tag} 보충문제`, panelType: 'supplementary-quiz', artifactType: 'supplementary-quiz' },
+      ]
+      window.dispatchEvent(new CustomEvent('export-artifacts', { detail: { items } }))
+    } catch (_) {}
   }, [exported])
 
   return (

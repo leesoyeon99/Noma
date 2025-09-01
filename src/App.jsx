@@ -734,6 +734,38 @@ export default function App(){
     window.addEventListener('open-right-panel', handler)
     return () => window.removeEventListener('open-right-panel', handler)
   }, [])
+  
+  // Export 산출물 → Todo 자동 배정
+  useEffect(() => {
+    const assign = (e) => {
+      try{
+        const items = Array.isArray(e?.detail?.items) ? e.detail.items : []
+        if (items.length === 0) return
+        const dateKey = selectedDateKey
+        const addIfNotExists = (list, setter, label, artifact) => {
+          const exists = (list||[]).some(it => it.label === label)
+          if (exists) return
+          const newItem = { id: `ai-${Date.now()}-${Math.random().toString(36).slice(2,6)}`, label, time: 0, done: false, source: 'export', artifactType: artifact.panelType, artifactRef: { type: artifact.panelType } }
+          setter(prev => ({ ...prev, [dateKey]: [...(prev[dateKey]||[]), newItem] }))
+        }
+        items.forEach((art, idx) => {
+          const label = String(art.label||'').trim()
+          if (!label) return
+          // 간단 매핑: 리포트→study, 오답노트→토익 RC/LC, 보충문제→study
+          if (art.panelType === 'pdf-report') {
+            addIfNotExists(studyTodosByDate[dateKey], setStudyTodosByDate, label, art)
+          } else if (art.panelType === 'wrong-note') {
+            addIfNotExists(toeicTodosByDate[dateKey], setToeicTodosByDate, label, art)
+          } else {
+            addIfNotExists(studyTodosByDate[dateKey], setStudyTodosByDate, label, art)
+          }
+        })
+        addTimelineEntry('AI 산출물이 오늘의 할 일에 배정되었습니다.')
+      } catch(_) {}
+    }
+    window.addEventListener('export-artifacts', assign)
+    return () => window.removeEventListener('export-artifacts', assign)
+  }, [selectedDateKey, studyTodosByDate, toeicTodosByDate])
   // right sidebar visibility handled via isRightAllowed/isRightOpen
 
   const isRightAllowed = (activeView === 'home') || (rightPanel.type !== 'todo')
@@ -1379,9 +1411,10 @@ export default function App(){
             <ul className="list">
               {workoutList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>} {it.source==='export' && <span className="chip" style={{marginLeft:6}}>AI</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('근력/유산소', it.id)} onClick={e=>e.stopPropagation()} />
+                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('근력/유산소', it.id)}}>삭제</button>
                   </span>
@@ -1414,9 +1447,10 @@ export default function App(){
             <ul className="list">
               {toeicList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>} {it.source==='export' && <span className="chip" style={{marginLeft:6}}>AI</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('토익 RC/LC', it.id)} onClick={e=>e.stopPropagation()} />
+                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
                   </span>
@@ -1449,9 +1483,10 @@ export default function App(){
             <ul className="list">
               {englishConversationList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>} {it.source==='export' && <span className="chip" style={{marginLeft:6}}>AI</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('영어 회화', it.id)} onClick={e=>e.stopPropagation()} />
+                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('영어 회화', it.id)}}>삭제</button>
                   </span>
@@ -1484,9 +1519,10 @@ export default function App(){
             <ul className="list">
               {studyList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span>{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>} {it.source==='export' && <span className="chip" style={{marginLeft:6}}>AI</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('study', it.id)} onClick={e=>e.stopPropagation()} />
+                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('study', it.id)}}>삭제</button>
                   </span>

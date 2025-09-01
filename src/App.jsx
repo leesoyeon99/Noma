@@ -1411,10 +1411,9 @@ export default function App(){
             <ul className="list">
               {workoutList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6, cursor:'pointer'}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('근력/유산소', it.id)} onClick={e=>e.stopPropagation()} />
-                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('근력/유산소', it.id)}}>삭제</button>
                   </span>
@@ -1447,12 +1446,11 @@ export default function App(){
             <ul className="list">
               {toeicList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                                    <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6, cursor:'pointer'}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('토익 RC/LC', it.id)} onClick={e=>e.stopPropagation()} />
-                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
-                                         <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
+                    <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('토익 RC/LC', it.id)}}>삭제</button>
                   </span>
                 </li>
               ))}
@@ -1483,10 +1481,9 @@ export default function App(){
             <ul className="list">
               {englishConversationList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6, cursor:'pointer'}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('영어 회화', it.id)} onClick={e=>e.stopPropagation()} />
-                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('영어 회화', it.id)}}>삭제</button>
                   </span>
@@ -1519,10 +1516,9 @@ export default function App(){
             <ul className="list">
               {studyList.map(it=> (
                 <li key={it.id} className={'item ' + (it.done?'strike':'')} style={{justifyContent:'space-between'}}>
-                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
+                  <span style={{display:'flex', alignItems:'center', whiteSpace:'nowrap'}}>{it.source==='export' && <span className="chip" style={{marginRight:6, cursor:'pointer'}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>AI</span>}{it.label} {it.time > 0 && <span className="text-xs text-gray-500">({it.time}분)</span>}</span>
                   <span style={{whiteSpace:'nowrap', display:'inline-flex', alignItems:'center'}}>
                     <input type="checkbox" className="checkbox" checked={it.done} onChange={()=>toggleTodo('study', it.id)} onClick={e=>e.stopPropagation()} />
-                    {it.artifactRef && <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); const t=it.artifactRef?.type||'pdf-report'; openSidePanel(t)}}>열기</button>}
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); /* 수정 로직 */}}>수정</button>
                     <button className="btn btn-xs" style={{marginLeft:8}} onClick={(e)=>{e.stopPropagation(); deleteTodo('study', it.id)}}>삭제</button>
                   </span>

@@ -110,6 +110,54 @@ const EXAM_DATA = {
       {title:'법인세 손금 항목 분류', time:'30분', details:'손금산입/불산입 기준과 한도 계산'},
       {title:'부가가치세 면세와 영세율', time:'25분', details:'개념 구분과 세액 계산 실습'}
     ]
+  },
+  '2025 프로그래머스 코드 챌린지': {
+    subject: '코딩테스트',
+    scope: ['알고리즘','자료구조','동적계획법','그래프'],
+    totalQuestions: 6,
+    weakConcepts: [
+      { name: '동적계획법', description: 'DP 테이블 설계와 점화식 도출', count: 2 },
+      { name: '그래프 탐색', description: 'BFS/DFS 구현과 최적화', count: 2 },
+      { name: '문자열 처리', description: '정규표현식과 파싱 로직', count: 1 },
+      { name: '시간복잡도', description: 'O(n^2) 알고리즘의 최적화', count: 1 }
+    ],
+    mistakes: [
+      {num:1, text:'문자열과 알파벳과 쿼리 (Lv.5)', concept:'문자열 처리', note:'정규표현식 구현 실패'},
+      {num:3, text:'최단경로 찾기 (Lv.4)', concept:'그래프 탐색', note:'다익스트라 구현 오류'},
+      {num:4, text:'동전 문제 (Lv.3)', concept:'동적계획법', note:'DP 점화식 도출 실패'},
+      {num:5, text:'트리 순회 (Lv.3)', concept:'그래프 탐색', note:'재귀 깊이 제한 초과'},
+      {num:6, text:'배열 정렬 최적화 (Lv.2)', concept:'시간복잡도', note:'O(n log n) 구현 못함'}
+    ],
+    handwritingNotes: [
+      {
+        concept: '동적계획법', 
+        userNote: 'DP 테이블 어떻게 설계?', 
+        type: 'confusion',
+        aiAnalysis: '동적계획법에서 상태 정의와 전이 관계 설정에 어려움',
+        aiExplanation: 'DP 문제는 1) 상태 정의 2) 점화식 도출 3) 초기값 설정 4) 계산 순서 결정 순으로 접근하세요.'
+      },
+      {
+        concept: '그래프 탐색', 
+        userNote: 'BFS vs DFS 언제 써야 하지?', 
+        type: 'strategy',
+        aiAnalysis: 'BFS와 DFS의 적절한 사용 시점을 구분하지 못함',
+        aiExplanation: 'BFS: 최단경로, 레벨별 탐색 / DFS: 경로 존재 여부, 사이클 검출, 백트래킹에 주로 사용됩니다.'
+      },
+      {
+        concept: '시간복잡도', 
+        userNote: '시간 초과 계속 남...', 
+        type: 'optimization',
+        aiAnalysis: '알고리즘 시간복잡도 분석과 최적화 방법 부족',
+        aiExplanation: '입력 크기에 따른 적절한 알고리즘 선택이 중요합니다. n≤1000: O(n^2), n≤100000: O(n log n), n≤1000000: O(n)'
+      }
+    ],
+    plan: [
+      {title:'DP 기본 문제 집중', time:'60분', details:'동적계획법 상태 정의와 점화식 도출 연습'},
+      {title:'BFS/DFS 구현 연습', time:'45분', details:'그래프 탐색 알고리즘 구현과 최적화 방법'},
+      {title:'문자열 처리 심화', time:'40분', details:'정규표현식과 문자열 파싱 로직 구현'},
+      {title:'시간복잡도 최적화', time:'35분', details:'알고리즘 복잡도 분석과 최적화 기법'},
+      {title:'종합 모의고사', time:'90분', details:'실전 코딩테스트 환경에서 문제 해결'}
+    ]
   }
 }
 
@@ -125,6 +173,7 @@ async function apiIdentifyExam() {
     alternatives: [
       { label: '2024학년도 수학 수능 시험지', confidence: 0.86 },
       { label: '세법 모의고사 1회차', confidence: 0.78 },
+      { label: '2025 프로그래머스 코드 챌린지', confidence: 0.72 },
       { label: '2025년 8월 30일자 인바디 측정표', confidence: 0.65 },
       { label: '5급 공개경쟁채용시험(행정) 상황판단영역 가', confidence: 0.58 }
     ],
@@ -930,13 +979,13 @@ export default function GuidedJourneyDemo(){
                 <div 
                   key={index} 
                   className={`p-3 border rounded-lg transition-colors ${
-                    option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차'
+                    option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차' || option === '2025 프로그래머스 코드 챌린지'
                       ? `hover:bg-gray-50 cursor-pointer ${selectedExamType === option ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`
                       : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-70'
                   }`}
                   onClick={() => {
-                    // 세법과 수능수학만 실제로 선택 가능
-                    if (option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차') {
+                    // 지원되는 교재만 실제로 선택 가능
+                    if (option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차' || option === '2025 프로그래머스 코드 챌린지') {
                       selectedExamType = option;
                       setExamInfo({...examInfo, label: option, scope: EXAM_DATA[option]?.scope || examInfo.scope});
                     }
@@ -945,7 +994,7 @@ export default function GuidedJourneyDemo(){
                   <div className="font-medium">{option}</div>
                   {index === 0 && <span className="text-sm text-purple-600">(가장 높은 신뢰도)</span>}
                   {selectedExamType === option && <span className="text-sm text-blue-600">(선택됨)</span>}
-                  {!(option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차') && 
+                  {!(option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차' || option === '2025 프로그래머스 코드 챌린지') && 
                     <span className="text-sm text-gray-500">(데모 버전에서는 지원되지 않음)</span>
                   }
                 </div>
@@ -957,7 +1006,7 @@ export default function GuidedJourneyDemo(){
                 onClick={() => {
                   // 사용자가 선택한 교재 사용 (선택하지 않았다면 랜덤)
                   if (!selectedExamType || !EXAM_DATA[selectedExamType]) {
-                    const availableExams = ['2024학년도 수학 수능 시험지', '세법 모의고사 1회차'];
+                    const availableExams = ['2024학년도 수학 수능 시험지', '세법 모의고사 1회차', '2025 프로그래머스 코드 챌린지'];
                     selectedExamType = availableExams[Math.floor(Math.random() * availableExams.length)];
                   }
                   setExamInfo({...examInfo, label: selectedExamType, scope: EXAM_DATA[selectedExamType].scope});

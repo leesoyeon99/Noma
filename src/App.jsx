@@ -1615,6 +1615,26 @@ export default function App(){
                           <p className="text-sm text-purple-700">기본적인 세법 개념은 이해하고 있으나, 손금산입 한도 계산과 면세사업자 판정 기준에서 추가 학습이 필요합니다.</p>
                         </div>
                       </>
+                    ) : rightPanel.payload?.examType === '2025 프로그래머스 코드 챌린지' ? (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">채점 결과</h4>
+                          <p className="text-sm text-blue-700">해결: 3/6문제, 평균 소요시간: 45분</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">알고리즘 분석</h4>
+                          <p className="text-sm text-green-700">동적계획법, 그래프탐색, 문자열처리</p>
+                          <p className="text-sm text-red-600">취약: DP 점화식 도출, BFS 최적화</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">코드 리뷰</h4>
+                          <p className="text-sm text-yellow-700">시간복잡도 분석, 실행시간 그래프</p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">개선 방향</h4>
+                          <p className="text-sm text-purple-700">동적계획법 상태정의 연습과 그래프 탐색 최적화가 필요합니다. 특히 시간복잡도 개선에 집중하세요.</p>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
@@ -1666,6 +1686,31 @@ export default function App(){
                         <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
                           <h4 className="font-semibold text-green-800 mb-2">비고란</h4>
                           <p className="text-sm text-green-700">세법 조문 번호와 추가 암기사항 기록</p>
+                        </div>
+                      </>
+                    ) : rightPanel.payload?.examType === '2025 프로그래머스 코드 챌린지' ? (
+                      <>
+                        <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
+                          <h4 className="font-semibold text-red-800 mb-2">실패한 문제</h4>
+                          <p className="text-sm text-red-700">1번: 문자열과 알파벳과 쿼리 (Lv.5)</p>
+                          <p className="text-sm text-red-700">4번: 동전 문제 (Lv.3)</p>
+                          <p className="text-sm text-red-700">6번: 배열 정렬 최적화 (Lv.2)</p>
+                        </div>
+                        <div className="bg-orange-50 p-3 rounded border-l-4 border-orange-400">
+                          <h4 className="font-semibold text-orange-800 mb-2">코드 리뷰 노트</h4>
+                          <p className="text-sm text-orange-700">"정규표현식 구현 실패" (1번)</p>
+                          <p className="text-sm text-orange-700">"DP 점화식 도출 실패" (4번)</p>
+                          <p className="text-sm text-orange-700">"O(n log n) 구현 못함" (6번)</p>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">해결책/힌트</h4>
+                          <p className="text-sm text-blue-700">1번: 문자열 파싱과 정규표현식 문법 학습</p>
+                          <p className="text-sm text-blue-700">4번: DP 상태 정의부터 차근차근 접근</p>
+                          <p className="text-sm text-blue-700">6번: 병합정렬, 퀵정렬 구현 연습</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">추천 학습</h4>
+                          <p className="text-sm text-green-700">유사 문제 연습과 알고리즘 기본기 강화</p>
                         </div>
                       </>
                     ) : (
@@ -1723,6 +1768,30 @@ export default function App(){
                         <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
                           <h4 className="font-semibold text-yellow-800 mb-2">정답 및 해설</h4>
                           <p className="text-sm text-yellow-700">세법 조문 근거와 계산 과정 상세 해설</p>
+                        </div>
+                      </>
+                    ) : rightPanel.payload?.examType === '2025 프로그래머스 코드 챌린지' ? (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">맞춤형 문제 생성</h4>
+                          <p className="text-sm text-blue-700">실패한 알고리즘 유형별 난이도 조정</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">알고리즘별 문제</h4>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            <li>• 동적계획법: 4문항 (중급~고급)</li>
+                            <li>• 그래프 탐색: 3문항 (기초~중급)</li>
+                            <li>• 문자열 처리: 2문항 (중급)</li>
+                            <li>• 시간복잡도 최적화: 2문항 (고급)</li>
+                          </ul>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">추천 학습 순서</h4>
+                          <p className="text-sm text-purple-700">1. 그래프 탐색 기초 → 2. 문자열 처리 → 3. 동적계획법 → 4. 시간복잡도 최적화</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">해설 및 힌트</h4>
+                          <p className="text-sm text-yellow-700">단계별 접근법과 최적화 기법 포함</p>
                         </div>
                       </>
                     ) : (

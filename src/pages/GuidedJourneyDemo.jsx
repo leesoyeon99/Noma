@@ -1257,17 +1257,7 @@ export default function GuidedJourneyDemo(){
 
             <div className="mt-6 flex justify-between items-center">
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200"
-                  onClick={() => {
-                    // 오답노트 생성 로직
-                    console.log('오답노트 생성')
-                    // TODO: 실제 오답노트 생성 기능 구현
-                  }}
-                >
-                  📝 오답노트 생성
-                </Button>
+
                 <Button 
                   variant="outline" 
                   className="bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200"

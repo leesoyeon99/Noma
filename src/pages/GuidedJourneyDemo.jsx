@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import AppLayout from '../components/AppLayout'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
-import { Upload, CheckCircle2, AlertTriangle, FileText, BarChart2, Brain, Folder, Trash2, RefreshCw } from 'lucide-react'
+import { Upload, CheckCircle2, AlertTriangle, FileText, BarChart2, Brain, Folder, Trash2, RefreshCw, Share2 } from 'lucide-react'
+import BlogExportModal from '../components/BlogExportModal'
 
 // Lightweight UI helpers for this demo
 const Button = ({ children, variant = 'default', size = 'md', className = '', ...props }) => {
@@ -168,6 +169,8 @@ export default function GuidedJourneyDemo(){
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showDiagnosisDetail, setShowDiagnosisDetail] = useState(false)
   const [showTodoImportModal, setShowTodoImportModal] = useState(false)
+  const [showBlogExportModal, setShowBlogExportModal] = useState(false)
+  const [chatMessages, setChatMessages] = useState([])
   const [examOptions, setExamOptions] = useState([])
   const [domains, setDomains] = useState([
             { id: '토익 RC/LC', name: '실전 어휘 체크', tag: '토익 RC/LC', progress: 0 },
@@ -689,6 +692,21 @@ export default function GuidedJourneyDemo(){
                       </Button>
                       <div className="text-xs text-gray-500 text-center">추가 연습 문제 생성</div>
                     </div>
+
+                    {/* 블로그 내보내기 */}
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-12 text-base bg-white hover:bg-orange-50 border-2 border-orange-200 hover:border-orange-300 text-orange-700 hover:text-orange-800"
+                        onClick={() => setShowBlogExportModal(true)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-xl">📝</div>
+                          <span className="font-medium">블로그 내보내기</span>
+                        </div>
+                      </Button>
+                      <div className="text-xs text-gray-500 text-center">학습 내용을 블로그 포스트로 정리</div>
+                    </div>
                   </div>
                 )}
                 
@@ -766,7 +784,14 @@ export default function GuidedJourneyDemo(){
 
             {/* 상단: 챗 영역 (고정 높이, 스크롤) */}
             <div className="md:col-span-9 min-h-[260px]">
-              <ChatArea Button={Button} warmSuggestion={warmSuggestion} onCreateFile={(name)=>{ setEvidences(prev=>[...prev, { name, ts: Date.now() }]) }} onCompleteMicroCourse={()=> setCourseDone(v=>v+1)} chatContext={chatContext} />
+                              <ChatArea 
+                  Button={Button} 
+                  warmSuggestion={warmSuggestion} 
+                  onCreateFile={(name)=>{ setEvidences(prev=>[...prev, { name, ts: Date.now() }]) }} 
+                  onCompleteMicroCourse={()=> setCourseDone(v=>v+1)} 
+                  chatContext={chatContext}
+                  onMessagesChange={(messages) => setChatMessages(messages)}
+                />
             </div>
             {/* 우측 컬럼 제거: 중앙 9열로 확장 완료 */}
           </div>
@@ -1077,17 +1102,27 @@ export default function GuidedJourneyDemo(){
             </div>
 
             <div className="mt-6 flex justify-between items-center">
-              <Button 
-                variant="outline" 
-                className="bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200"
-                onClick={() => {
-                  // 오답노트 생성 로직
-                  console.log('오답노트 생성')
-                  // TODO: 실제 오답노트 생성 기능 구현
-                }}
-              >
-                📝 오답노트 생성
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="bg-orange-100 text-orange-800 border-orange-300 hover:bg-orange-200"
+                  onClick={() => {
+                    // 오답노트 생성 로직
+                    console.log('오답노트 생성')
+                    // TODO: 실제 오답노트 생성 기능 구현
+                  }}
+                >
+                  📝 오답노트 생성
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200"
+                  onClick={() => setShowBlogExportModal(true)}
+                >
+                  <Share2 className="mr-2" size={16} />
+                  📝 블로그 내보내기
+                </Button>
+              </div>
               <Button onClick={() => setShowDiagnosisDetail(false)}>
                 닫기
               </Button>
@@ -1095,16 +1130,45 @@ export default function GuidedJourneyDemo(){
           </div>
         </div>
       )}
+
+      {/* 블로그 내보내기 모달 */}
+      <BlogExportModal
+        isOpen={showBlogExportModal}
+        onClose={() => setShowBlogExportModal(false)}
+        learningData={{
+          subject: examInfo?.label || '수학',
+          timeSpent: 120, // 실제로는 사용자가 입력한 시간
+          accuracy: diag?.accuracy || 0,
+          totalQuestions: diag?.totalQuestions || 0,
+          correctAnswers: diag?.correctAnswers || 0,
+          weakConcepts: diag?.weakConcepts || [],
+          mistakes: diag?.mistakes || [],
+          handwritingNotes: diag?.handwritingNotes || []
+        }}
+        chatMessages={chatMessages}
+        onExport={(blogData) => {
+          console.log('블로그 내보내기:', blogData)
+          // TODO: 실제 블로그 플랫폼 API 연동
+          alert(`${blogData.platform}에 블로그 포스트가 발행되었습니다!`)
+        }}
+      />
     </AppLayout>
   )
 }
 
-function ChatArea({ Button, warmSuggestion, onCreateFile, onCompleteMicroCourse, chatContext }){
+function ChatArea({ Button, warmSuggestion, onCreateFile, onCompleteMicroCourse, chatContext, onMessagesChange }){
   const [messages, setMessages] = useState([
     {role:'user', text:'📄 업로드된 교재 요약해줘'},
     {role:'assistant', text:'→ 3장: 속력·거리·시간 공식 설명, 예제 2개 추가'}
   ])
   const [text, setText] = useState('')
+
+  // 메시지가 변경될 때마다 상위 컴포넌트에 전달
+  useEffect(() => {
+    if (onMessagesChange) {
+      onMessagesChange(messages)
+    }
+  }, [messages, onMessagesChange])
 
   useEffect(()=>{
     if (warmSuggestion) {

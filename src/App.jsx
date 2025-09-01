@@ -1174,31 +1174,6 @@ export default function App(){
                       
                       return (
                         <>
-                          {/* 카테고리 요약 (시간/개수) */}
-                          <li className="mb-4">
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="text-gray-700">📊</span>
-                                <span className="font-semibold text-gray-800">카테고리 요약 (시간/개수)</span>
-                              </div>
-                              <div className="table-like" style={{display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr', gap:8}}>
-                                <div className="small" style={{color:'#64748b'}}>카테고리</div>
-                                <div className="small" style={{color:'#64748b'}}>시간</div>
-                                <div className="small" style={{color:'#64748b'}}>개수</div>
-                                {timeBasedCategories.map(cat => {
-                                  const totalCount = cat.list.length
-                                  const doneCount = cat.list.filter(item => item.done).length
-                                  return (
-                                    <React.Fragment key={cat.name}>
-                                      <div className="t-cell name">{cat.name}</div>
-                                      <div className="t-cell small">{cat.completedTime}분 / {cat.totalTime}분</div>
-                                      <div className="t-cell small">{doneCount} / {totalCount}</div>
-                                    </React.Fragment>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          </li>
                           {/* 시간 기준 진도율 */}
                           <li className="mb-4">
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

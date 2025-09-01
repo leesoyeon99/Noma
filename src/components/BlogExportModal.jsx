@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 import { X, Edit3, Eye, Copy, Download, Globe, FileText, BookOpen, TrendingUp, Target } from 'lucide-react'
 
-const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onExport }) => {
+const SNSExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onExport }) => {
+  const [selectedPlatform, setSelectedPlatform] = useState('blog')
   const [selectedTemplate, setSelectedTemplate] = useState('learning-review')
 
   const [postTitle, setPostTitle] = useState('')
@@ -11,36 +12,85 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
   const [aiStyleGuide, setAiStyleGuide] = useState('')
   const [chatHistory, setChatHistory] = useState([])
 
-  const templates = [
+  const platforms = [
     {
-      id: 'learning-review',
-      name: '학습 후기형',
-      description: '개인적인 느낀점과 경험을 포함한 자연스러운 학습 후기',
-      icon: BookOpen,
+      id: 'blog',
+      name: '블로그',
+      description: '티스토리, 네이버블로그, 노션, velog',
+      icon: Globe,
       color: 'bg-blue-100 text-blue-800'
     },
     {
-      id: 'problem-solving',
-      name: '문제 해결형',
-      description: '어려웠던 문제와 해결 과정을 기록',
-      icon: Target,
-      color: 'bg-green-100 text-green-800'
-    },
-    {
-      id: 'concept-summary',
-      name: '개념 정리형',
-      description: '핵심 개념을 체계적으로 정리',
-      icon: FileText,
-      color: 'bg-purple-100 text-purple-800'
-    },
-    {
-      id: 'progress-review',
-      name: '성과 리뷰형',
-      description: '학습 성과와 다음 계획을 점검',
-      icon: TrendingUp,
-      color: 'bg-orange-100 text-orange-800'
+      id: 'instagram',
+      name: '인스타그램',
+      description: '피드, 스토리, 릴스 최적화',
+      icon: Eye,
+      color: 'bg-pink-100 text-pink-800'
     }
   ]
+
+  const templates = {
+    blog: [
+      {
+        id: 'learning-review',
+        name: '학습 후기형',
+        description: '개인적인 느낀점과 경험을 포함한 자연스러운 학습 후기',
+        icon: BookOpen,
+        color: 'bg-blue-100 text-blue-800'
+      },
+      {
+        id: 'problem-solving',
+        name: '문제 해결형',
+        description: '어려웠던 문제와 해결 과정을 기록',
+        icon: Target,
+        color: 'bg-green-100 text-green-800'
+      },
+      {
+        id: 'concept-summary',
+        name: '개념 정리형',
+        description: '핵심 개념을 체계적으로 정리',
+        icon: FileText,
+        color: 'bg-purple-100 text-purple-800'
+      },
+      {
+        id: 'progress-review',
+        name: '성과 리뷰형',
+        description: '학습 성과와 다음 계획을 점검',
+        icon: TrendingUp,
+        color: 'bg-orange-100 text-orange-800'
+      }
+    ],
+    instagram: [
+      {
+        id: 'daily-study',
+        name: '일상 학습형',
+        description: '짧고 임팩트 있는 학습 순간 공유',
+        icon: BookOpen,
+        color: 'bg-pink-100 text-pink-800'
+      },
+      {
+        id: 'study-tip',
+        name: '공부 꿀팁형',
+        description: '핵심 포인트와 암기법 중심',
+        icon: Target,
+        color: 'bg-purple-100 text-purple-800'
+      },
+      {
+        id: 'motivational',
+        name: '동기부여형',
+        description: '학습 성취감과 응원 메시지',
+        icon: TrendingUp,
+        color: 'bg-orange-100 text-orange-800'
+      },
+      {
+        id: 'visual-summary',
+        name: '비주얼 요약형',
+        description: '이미지와 짧은 텍스트로 요약',
+        icon: Eye,
+        color: 'bg-green-100 text-green-800'
+      }
+    ]
+  }
 
 
 
@@ -63,16 +113,17 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
     
     setIsGenerating(true)
     
-    // AI 기반 블로그 콘텐츠 생성 (시뮬레이션)
+    // AI 기반 SNS 콘텐츠 생성 (시뮬레이션)
     await new Promise(resolve => setTimeout(resolve, 1500))
     
-    const template = templates.find(t => t.id === selectedTemplate)
+    const template = templates[selectedPlatform].find(t => t.id === selectedTemplate)
     const date = new Date().toLocaleDateString('ko-KR')
     
     let title = ''
     let content = ''
     
-    switch (selectedTemplate) {
+    if (selectedPlatform === 'blog') {
+      switch (selectedTemplate) {
       case 'learning-review':
         title = `오늘 ${learningData.subject || '수학'} 공부하면서 느낀 점들 (${date})`
         
@@ -317,8 +368,103 @@ ${learningData.accuracy < 70 ? '정답률이 낮다고 해서 실망할 필요 �
 *NOMA AI가 생성한 학습 성과 리뷰입니다.*`
                 break
         
-
+        default:
+          title = `${learningData.subject || '수학'} 학습 기록 (${date})`
+          content = '학습 내용을 정리해보겠습니다.'
+          break
       }
+    } else if (selectedPlatform === 'instagram') {
+      switch (selectedTemplate) {
+        case 'daily-study':
+          title = `📚 오늘의 ${learningData.subject || '수학'} 공부`
+          content = `오늘 ${learningData.subject || '수학'} 공부 완료! ✨
+
+📖 공부 시간: ${learningData.timeSpent || 0}분
+📊 정답률: ${learningData.accuracy || 0}%
+🎯 집중 영역: ${(learningData.weakConcepts || []).slice(0, 2).map(c => c.name).join(', ')}
+
+${aiStyleGuide ? `💡 ${aiStyleGuide}\n\n` : ''}오늘의 한 줄 후기
+"${learningData.accuracy >= 80 ? '생각보다 잘했다! 뿌듯 😊' : 
+   learningData.accuracy >= 60 ? '조금 더 노력하면 될 것 같아' : 
+   '어려웠지만 포기하지 않았다 💪'}"
+
+내일도 화이팅! 🔥
+
+#공부 #${learningData.subject || '수학'} #공부기록 #학습 #성장 #노마 #공부스타그램`
+          break
+
+        case 'study-tip':
+          title = `💡 ${learningData.subject || '수학'} 공부 꿀팁`
+          content = `${learningData.subject || '수학'} 공부할 때 이것만 기억하자! 📌
+
+${(learningData.weakConcepts || []).slice(0, 3).map((concept, i) => 
+  `${i + 1}️⃣ ${concept.name}\n${concept.description ? `   → ${concept.description.slice(0, 30)}...` : '   → 기본 개념부터 차근차근!'}`
+).join('\n\n')}
+
+${aiStyleGuide ? `\n🎯 ${aiStyleGuide}\n` : ''}
+💪 핵심은 반복 학습!
+🔥 매일 조금씩이라도 꾸준히
+
+여러분도 이 방법으로 도전해보세요! 💫
+
+#공부팁 #${learningData.subject || '수학'} #공부법 #학습팁 #공부스타그램 #성장 #노마`
+          break
+
+        case 'motivational':
+          title = `🔥 ${learningData.subject || '수학'} 공부 성과`
+          content = `오늘도 한 걸음 더 성장했다! 🌟
+
+📈 나의 성과
+• 정답률: ${learningData.accuracy || 0}%
+• 공부 시간: ${learningData.timeSpent || 0}분
+• 해결한 문제: ${learningData.totalQuestions || 0}개
+
+${learningData.accuracy >= 80 ? 
+  '🎉 목표를 달성했어요! 이 기세로 쭉!' : 
+  learningData.accuracy >= 60 ? 
+  '👍 괜찮은 성과! 조금만 더 노력하면 완벽!' : 
+  '💪 어려웠지만 포기하지 않았어요. 내일은 더 잘할 수 있을 거예요!'
+}
+
+${aiStyleGuide ? `\n✨ ${aiStyleGuide}\n` : ''}
+실패는 성공의 어머니라고 하잖아요
+오늘의 경험이 내일의 밑거름이 될 거예요 🌱
+
+함께 성장해요! 💫
+
+#공부동기 #성장 #${learningData.subject || '수학'} #공부기록 #동기부여 #노마 #파이팅`
+          break
+
+        case 'visual-summary':
+          title = `📊 ${learningData.subject || '수학'} 학습 요약`
+          content = `📋 학습 요약 보고서
+
+━━━━━━━━━━━━━━━━━
+📚 과목: ${learningData.subject || '수학'}
+⏰ 시간: ${learningData.timeSpent || 0}분
+📊 정답률: ${learningData.accuracy || 0}%
+━━━━━━━━━━━━━━━━━
+
+🎯 오늘의 포커스
+${(learningData.weakConcepts || []).slice(0, 2).map((concept, i) => 
+  `${i + 1}. ${concept.name}`
+).join('\n')}
+
+${learningData.accuracy >= 80 ? '✅ 목표 달성!' : 
+  learningData.accuracy >= 60 ? '⚡ 아슬아슬 성공' : '💪 다음엔 더 잘할 수 있어'}
+
+${aiStyleGuide ? `\n💡 ${aiStyleGuide}\n` : ''}
+📈 내일의 목표: 오늘보다 +10% 향상
+
+#공부기록 #학습요약 #${learningData.subject || '수학'} #성과 #비주얼 #노마`
+          break
+
+        default:
+          title = `📱 ${learningData.subject || '수학'} 학습 기록`
+          content = '오늘도 열심히 공부했어요! 🔥'
+          break
+      }
+    }
       
       setPostTitle(title)
       setPostContent(content)
@@ -342,7 +488,7 @@ ${learningData.accuracy < 70 ? '정답률이 낮다고 해서 실망할 필요 �
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold">📝 블로그 내보내기</h2>
+          <h2 className="text-xl font-bold">📱 SNS 내보내기</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
             <X size={20} />
           </button>
@@ -352,11 +498,45 @@ ${learningData.accuracy < 70 ? '정답률이 낮다고 해서 실망할 필요 �
           {/* Left Panel - 설정 */}
           <div className="w-1/3 border-r p-6 space-y-6 overflow-y-auto">
 
+            {/* 플랫폼 선택 */}
+            <div>
+              <h3 className="font-semibold mb-3">📱 플랫폼 선택</h3>
+              <div className="space-y-3">
+                {platforms.map(platform => {
+                  const Icon = platform.icon
+                  return (
+                    <div
+                      key={platform.id}
+                      onClick={() => {
+                        setSelectedPlatform(platform.id)
+                        setSelectedTemplate(templates[platform.id][0].id)
+                      }}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedPlatform === platform.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${platform.color}`}>
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <div className="font-medium">{platform.name}</div>
+                          <div className="text-sm text-gray-500">{platform.description}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* 템플릿 선택 */}
             <div>
               <h3 className="font-semibold mb-3">📋 템플릿 선택</h3>
               <div className="grid grid-cols-2 gap-2">
-                {templates.map(template => (
+                {templates[selectedPlatform].map(template => (
                   <div
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
@@ -535,4 +715,4 @@ ${learningData.accuracy < 70 ? '정답률이 낮다고 해서 실망할 필요 �
   )
 }
 
-export default BlogExportModal
+export default SNSExportModal

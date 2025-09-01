@@ -3,7 +3,7 @@ import AppLayout from '../components/AppLayout'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import { Upload, CheckCircle2, AlertTriangle, FileText, BarChart2, Brain, Folder, Trash2, RefreshCw, Share2 } from 'lucide-react'
-import BlogExportModal from '../components/BlogExportModal'
+import SNSExportModal from '../components/BlogExportModal'
 
 // Lightweight UI helpers for this demo
 const Button = ({ children, variant = 'default', size = 'md', className = '', ...props }) => {
@@ -520,7 +520,7 @@ export default function GuidedJourneyDemo(){
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                       <div className="text-sm font-medium text-blue-800 mb-2">📚 학습 범위</div>
                       <div className="text-sm text-blue-700">
-                        {coach.scope?.map((item, idx) => (
+                        {examInfo.scope?.map((item, idx) => (
                           <div key={idx} className="mb-1">• {item}</div>
                         ))}
                       </div>
@@ -706,7 +706,7 @@ export default function GuidedJourneyDemo(){
                       <Button 
                         variant="outline" 
                         className="w-full h-12 text-base bg-white hover:bg-blue-50 border-2 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800"
-                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf-report' } }))}
+                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'pdf-report', examType: selectedExamType } }))}
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-xl">📄</div>
@@ -721,7 +721,7 @@ export default function GuidedJourneyDemo(){
                       <Button 
                         variant="outline" 
                         className="w-full h-12 text-base bg-white hover:bg-green-50 border-2 border-green-200 hover:border-green-300 text-green-700 hover:text-green-800"
-                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note' } }))}
+                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'wrong-note', examType: selectedExamType } }))}
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-xl">📝</div>
@@ -736,7 +736,7 @@ export default function GuidedJourneyDemo(){
                       <Button 
                         variant="outline" 
                         className="w-full h-12 text-base bg-white hover:bg-purple-50 border-2 border-purple-200 hover:border-purple-300 text-purple-700 hover:text-purple-800"
-                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'supplementary-quiz' } }))}
+                        onClick={()=>window.dispatchEvent(new CustomEvent('open-right-panel',{ detail: { type: 'supplementary-quiz', examType: selectedExamType } }))}
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-xl">📚</div>
@@ -746,7 +746,7 @@ export default function GuidedJourneyDemo(){
                       <div className="text-xs text-gray-500 text-center">추가 연습 문제 생성</div>
                     </div>
 
-                    {/* 블로그 내보내기 */}
+                    {/* SNS 내보내기 */}
                     <div className="space-y-2">
                       <Button 
                         variant="outline" 
@@ -754,11 +754,11 @@ export default function GuidedJourneyDemo(){
                         onClick={() => setShowBlogExportModal(true)}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="text-xl">📝</div>
-                          <span className="font-medium">블로그 내보내기</span>
+                          <div className="text-xl">📱</div>
+                          <span className="font-medium">SNS 내보내기</span>
                         </div>
                       </Button>
-                      <div className="text-xs text-gray-500 text-center">학습 내용을 블로그 포스트로 정리</div>
+                      <div className="text-xs text-gray-500 text-center">학습 내용을 SNS 포스트로 생성</div>
                     </div>
                   </div>
                 )}
@@ -1225,7 +1225,7 @@ export default function GuidedJourneyDemo(){
                   onClick={() => setShowBlogExportModal(true)}
                 >
                   <Share2 className="mr-2" size={16} />
-                  📝 블로그 내보내기
+                  📱 SNS 내보내기
                 </Button>
               </div>
               <Button onClick={() => setShowDiagnosisDetail(false)}>
@@ -1236,8 +1236,8 @@ export default function GuidedJourneyDemo(){
         </div>
       )}
 
-      {/* 블로그 내보내기 모달 */}
-      <BlogExportModal
+      {/* SNS 내보내기 모달 */}
+      <SNSExportModal
         isOpen={showBlogExportModal}
         onClose={() => setShowBlogExportModal(false)}
         learningData={{
@@ -1252,7 +1252,7 @@ export default function GuidedJourneyDemo(){
         }}
         chatMessages={chatMessages}
         onExport={(blogData) => {
-          console.log('블로그 내보내기:', blogData)
+          console.log('SNS 내보내기:', blogData)
           // TODO: 실제 블로그 플랫폼 API 연동
           alert(`${blogData.platform}에 블로그 포스트가 발행되었습니다!`)
         }}

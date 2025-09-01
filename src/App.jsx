@@ -729,7 +729,8 @@ export default function App(){
   useEffect(() => {
     const handler = (e) => {
       const t = e.detail?.type || 'todo'
-      openSidePanel(t)
+      const examType = e.detail?.examType
+      openSidePanel(t, { examType })
     }
     window.addEventListener('open-right-panel', handler)
     return () => window.removeEventListener('open-right-panel', handler)
@@ -1594,23 +1595,47 @@ export default function App(){
                 <div className="small">
                   <p><b>PDF 리포트 미리보기</b></p>
                   <div className="space-y-3">
-                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                      <h4 className="font-semibold text-blue-800 mb-2">점수 요약</h4>
-                      <p className="text-sm text-blue-700">점수: 78점 (13/20), 평균 정답률: 65%</p>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
-                      <h4 className="font-semibold text-green-800 mb-2">개념 분석</h4>
-                      <p className="text-sm text-green-700">수와 연산, 기하, 확률과 통계, 문자와 식</p>
-                      <p className="text-sm text-red-600">취약: 분수 나눗셈, 속력 공식</p>
-                    </div>
-                    <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                      <h4 className="font-semibold text-yellow-800 mb-2">그래프/시각화</h4>
-                      <p className="text-sm text-yellow-700">정답률 그래프, 개념별 취약도 차트</p>
-                    </div>
-                    <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
-                      <h4 className="font-semibold text-purple-800 mb-2">피드백 코멘트</h4>
-                      <p className="text-sm text-purple-700">수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다.</p>
-                    </div>
+                    {rightPanel.payload?.examType === '세법 모의고사 1회차' ? (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">점수 요약</h4>
+                          <p className="text-sm text-blue-700">점수: 72점 (18/25), 평균 정답률: 72%</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">개념 분석</h4>
+                          <p className="text-sm text-green-700">소득세법, 법인세법, 부가가치세법</p>
+                          <p className="text-sm text-red-600">취약: 손금산입 한도, 면세사업자 판정</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">그래프/시각화</h4>
+                          <p className="text-sm text-yellow-700">세법별 정답률 분포, 취약 개념 차트</p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">피드백 코멘트</h4>
+                          <p className="text-sm text-purple-700">기본적인 세법 개념은 이해하고 있으나, 손금산입 한도 계산과 면세사업자 판정 기준에서 추가 학습이 필요합니다.</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">점수 요약</h4>
+                          <p className="text-sm text-blue-700">점수: 78점 (13/20), 평균 정답률: 65%</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">개념 분석</h4>
+                          <p className="text-sm text-green-700">확률과통계, 수학Ⅱ</p>
+                          <p className="text-sm text-red-600">취약: 정적분 계산, 조건부확률</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">그래프/시각화</h4>
+                          <p className="text-sm text-yellow-700">정답률 그래프, 개념별 취약도 차트</p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">피드백 코멘트</h4>
+                          <p className="text-sm text-purple-700">수학의 기초 개념들은 잘 이해하고 있으나, 정적분 계산과 조건부확률에서 추가 연습이 필요합니다.</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -1618,28 +1643,57 @@ export default function App(){
                 <div className="small">
                   <p><b>오답노트 미리보기</b></p>
                   <div className="space-y-3">
-                    <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
-                      <h4 className="font-semibold text-red-800 mb-2">틀린 문제 원문</h4>
-                      <p className="text-sm text-red-700">5번: 분수 나눗셈 문제</p>
-                      <p className="text-sm text-red-700">8번: 속력 계산 문제</p>
-                      <p className="text-sm text-red-700">11번: 확률 계산 문제</p>
-                    </div>
-                    <div className="bg-orange-50 p-3 rounded border-l-4 border-orange-400">
-                      <h4 className="font-semibold text-orange-800 mb-2">내 풀이 흔적</h4>
-                      <p className="text-sm text-orange-700">"역수? 어떻게?" (5번)</p>
-                      <p className="text-sm text-orange-700">"단위 변환 복잡함" (8번)</p>
-                      <p className="text-sm text-orange-700">"표본공간이 뭐지?" (11번)</p>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                      <h4 className="font-semibold text-blue-800 mb-2">정답/해설</h4>
-                      <p className="text-sm text-blue-700">5번: 역수 곱하기를 깜빡함</p>
-                      <p className="text-sm text-blue-700">8번: km/h → m/s 변환 오류</p>
-                      <p className="text-sm text-blue-700">11번: 표본공간 설정 안됨</p>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
-                      <h4 className="font-semibold text-green-800 mb-2">비고란</h4>
-                      <p className="text-sm text-green-700">학생이 직접 메모할 수 있는 공간</p>
-                    </div>
+                    {rightPanel.payload?.examType === '세법 모의고사 1회차' ? (
+                      <>
+                        <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
+                          <h4 className="font-semibold text-red-800 mb-2">틀린 문제 원문</h4>
+                          <p className="text-sm text-red-700">3번: 손금산입 한도 계산</p>
+                          <p className="text-sm text-red-700">7번: 면세사업자 판정 기준</p>
+                          <p className="text-sm text-red-700">15번: 부가가치세 계산</p>
+                        </div>
+                        <div className="bg-orange-50 p-3 rounded border-l-4 border-orange-400">
+                          <h4 className="font-semibold text-orange-800 mb-2">내 풀이 흔적</h4>
+                          <p className="text-sm text-orange-700">"한도액이 헷갈림" (3번)</p>
+                          <p className="text-sm text-orange-700">"면세 기준이 뭐였지?" (7번)</p>
+                          <p className="text-sm text-orange-700">"세율 계산 실수" (15번)</p>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">정답/해설</h4>
+                          <p className="text-sm text-blue-700">3번: 손금산입 한도는 소득금액의 50%</p>
+                          <p className="text-sm text-blue-700">7번: 연매출액 8천만원 미만 시 면세</p>
+                          <p className="text-sm text-blue-700">15번: 부가가치세율 10% 적용</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">비고란</h4>
+                          <p className="text-sm text-green-700">세법 조문 번호와 추가 암기사항 기록</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
+                          <h4 className="font-semibold text-red-800 mb-2">틀린 문제 원문</h4>
+                          <p className="text-sm text-red-700">5번: 정적분 계산 문제</p>
+                          <p className="text-sm text-red-700">8번: 조건부확률 문제</p>
+                          <p className="text-sm text-red-700">11번: 미분 응용 문제</p>
+                        </div>
+                        <div className="bg-orange-50 p-3 rounded border-l-4 border-orange-400">
+                          <h4 className="font-semibold text-orange-800 mb-2">내 풀이 흔적</h4>
+                          <p className="text-sm text-orange-700">"적분 구간이 헷갈림" (5번)</p>
+                          <p className="text-sm text-orange-700">"조건 해석 어려움" (8번)</p>
+                          <p className="text-sm text-orange-700">"최댓값 구하기 실수" (11번)</p>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">정답/해설</h4>
+                          <p className="text-sm text-blue-700">5번: 적분 구간 설정 오류</p>
+                          <p className="text-sm text-blue-700">8번: 조건부확률 공식 적용 실수</p>
+                          <p className="text-sm text-blue-700">11번: 미분계수가 0인 점 찾기</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">비고란</h4>
+                          <p className="text-sm text-green-700">공식 정리와 유사 문제 추가 연습 필요</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -1647,27 +1701,55 @@ export default function App(){
                 <div className="small">
                   <p><b>보충문제 미리보기</b></p>
                   <div className="space-y-3">
-                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                      <h4 className="font-semibold text-blue-800 mb-2">자동 생성 문제</h4>
-                      <p className="text-sm text-blue-700">틀린 개념 위주로 난이도 조정</p>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
-                      <h4 className="font-semibold text-green-800 mb-2">개념별 문제</h4>
-                      <ul className="text-sm text-green-700 space-y-1">
-                        <li>• 분수 나눗셈: 2문항 (쉬움)</li>
-                        <li>• 속력 공식: 2문항 (보통)</li>
-                        <li>• 확률 기초: 2문항 (보통)</li>
-                        <li>• 도형의 성질: 1문항 (어려움)</li>
-                      </ul>
-                    </div>
-                    <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
-                      <h4 className="font-semibold text-purple-800 mb-2">추천 학습 루트</h4>
-                      <p className="text-sm text-purple-700">1. 분수 나눗셈 → 2. 속력 공식 → 3. 확률 기초 → 4. 도형의 성질</p>
-                    </div>
-                    <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                      <h4 className="font-semibold text-yellow-800 mb-2">정답 및 해설</h4>
-                      <p className="text-sm text-yellow-700">모든 문제에 상세한 해설 포함</p>
-                    </div>
+                    {rightPanel.payload?.examType === '세법 모의고사 1회차' ? (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">자동 생성 문제</h4>
+                          <p className="text-sm text-blue-700">취약 세법 개념 위주로 난이도 조정</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">개념별 문제</h4>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            <li>• 손금산입 한도: 3문항 (보통)</li>
+                            <li>• 면세사업자 판정: 2문항 (쉬움)</li>
+                            <li>• 부가가치세 계산: 2문항 (어려움)</li>
+                            <li>• 소득세법 기초: 1문항 (보통)</li>
+                          </ul>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">추천 학습 루트</h4>
+                          <p className="text-sm text-purple-700">1. 면세사업자 판정 → 2. 손금산입 한도 → 3. 소득세법 기초 → 4. 부가가치세 계산</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">정답 및 해설</h4>
+                          <p className="text-sm text-yellow-700">세법 조문 근거와 계산 과정 상세 해설</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <h4 className="font-semibold text-blue-800 mb-2">자동 생성 문제</h4>
+                          <p className="text-sm text-blue-700">틀린 개념 위주로 난이도 조정</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
+                          <h4 className="font-semibold text-green-800 mb-2">개념별 문제</h4>
+                          <ul className="text-sm text-green-700 space-y-1">
+                            <li>• 정적분 계산: 3문항 (보통)</li>
+                            <li>• 조건부확률: 2문항 (어려움)</li>
+                            <li>• 미분 응용: 2문항 (보통)</li>
+                            <li>• 함수의 극한: 1문항 (쉬움)</li>
+                          </ul>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded border-l-4 border-purple-400">
+                          <h4 className="font-semibold text-purple-800 mb-2">추천 학습 루트</h4>
+                          <p className="text-sm text-purple-700">1. 함수의 극한 → 2. 미분 응용 → 3. 정적분 계산 → 4. 조건부확률</p>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                          <h4 className="font-semibold text-yellow-800 mb-2">정답 및 해설</h4>
+                          <p className="text-sm text-yellow-700">단계별 풀이 과정과 공식 유도 포함</p>
+                        </div>
+                      </>
+                    )}
                   </div>
               </div>
             )}

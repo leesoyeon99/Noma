@@ -8,7 +8,6 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
   const [postTitle, setPostTitle] = useState('')
   const [postContent, setPostContent] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [userKeywords, setUserKeywords] = useState('')
   const [suggestedModules, setSuggestedModules] = useState([])
   const [aiStyleGuide, setAiStyleGuide] = useState('')
   const [chatHistory, setChatHistory] = useState([])
@@ -66,10 +65,10 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
   }, [isOpen, selectedTemplate, learningData])
 
   useEffect(() => {
-    if (isOpen && learningData && (userKeywords || suggestedModules.length > 0 || aiStyleGuide || chatHistory.length > 0)) {
+    if (isOpen && learningData && (suggestedModules.length > 0 || aiStyleGuide || chatHistory.length > 0)) {
       generateBlogContent()
     }
-  }, [userKeywords, suggestedModules, aiStyleGuide, chatHistory])
+  }, [suggestedModules, aiStyleGuide, chatHistory])
 
   const generateSuggestedModules = () => {
     if (!learningData) return
@@ -148,7 +147,7 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
 **학습 시간**: ${learningData.timeSpent || 0}분
 **정답률**: ${learningData.accuracy || 0}%
 
-${userKeywords ? `**핵심 키워드**: ${userKeywords}\n` : ''}${aiStyleGuide ? `**작성 스타일**: ${aiStyleGuide}\n` : ''}${reviewStyle}
+${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n` : ''}${reviewStyle}
 
 ### 🎯 주요 성과
 - 총 ${learningData.totalQuestions || 0}문제 중 ${learningData.correctAnswers || 0}문제 정답
@@ -185,7 +184,7 @@ ${suggestedModules.map(module =>
 **총 문제 수**: ${learningData.totalQuestions || 0}문제
 **정답률**: ${learningData.accuracy || 0}%
 
-${userKeywords ? `**핵심 키워드**: ${userKeywords}\n` : ''}
+${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n\n` : ''}
 
 ### ❌ 오답 분석
 ${(learningData.mistakes || []).map(mistake => 
@@ -302,11 +301,11 @@ ${(learningData.weakConcepts || []).map(concept =>
 
 ## 🎯 오늘 공부한 내용
 
-${userKeywords ? `**주요 키워드**: ${userKeywords}\n\n` : ''}**학습 주제**: ${learningData.subject || '수학'}
+**학습 주제**: ${learningData.subject || '수학'}
 **공부 시간**: ${learningData.timeSpent || 0}분
 **정답률**: ${learningData.accuracy || 0}%
 
-${aiStyleGuide ? `**작성 스타일**: ${aiStyleGuide}\n\n` : ''}## 💭 개인적인 느낀점
+${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n\n` : ''}## 💭 개인적인 느낀점
 
 ### 1. 가장 어려웠던 부분
 ${(learningData.weakConcepts || []).map((concept, index) => 
@@ -391,54 +390,41 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
         <div className="flex h-[calc(90vh-120px)]">
           {/* Left Panel - 설정 */}
           <div className="w-1/3 border-r p-6 space-y-6 overflow-y-auto">
+            {/* 필드 설명 헬프 */}
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-xs text-blue-800">
+                <div className="font-medium mb-1">💡 각 필드의 역할</div>
+                <div className="space-y-1">
+                  <div>• <strong>AI 블로그 프롬프트</strong>: AI에게 블로그 작성을 어떻게 해달라고 요청</div>
+                  <div>• <strong>추천 학습 모듈</strong>: AI가 제안하는 다음 학습 방향</div>
+                </div>
+              </div>
+            </div>
             {/* 템플릿 선택 */}
             <div>
               <h3 className="font-semibold mb-3">📋 템플릿 선택</h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {templates.map(template => (
                   <div
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all text-center ${
                       selectedTemplate === template.id
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <template.icon size={16} />
-                      <div>
-                        <div className="font-medium">{template.name}</div>
-                        <div className="text-sm text-gray-600">{template.description}</div>
-                      </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <template.icon size={14} />
+                      <div className="text-xs font-medium">{template.name}</div>
+                      <div className="text-xs text-gray-600 leading-tight">{template.description}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 플랫폼 선택 */}
-            <div>
-              <h3 className="font-semibold mb-3">🌐 발행 플랫폼</h3>
-              <div className="space-y-2">
-                {platforms.map(platform => (
-                  <div
-                    key={platform.id}
-                    onClick={() => setSelectedPlatform(platform.id)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedPlatform === platform.id
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <platform.icon size={16} />
-                      <span className="font-medium">{platform.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
 
             {/* 제목 편집 */}
             <div>
@@ -452,20 +438,14 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
               />
             </div>
 
-            {/* 핵심 키워드 입력 */}
-            <div>
-              <h3 className="font-semibold mb-3">🔑 핵심 키워드</h3>
-              <textarea
-                value={userKeywords}
-                onChange={(e) => setUserKeywords(e.target.value)}
-                className="w-full p-2 border rounded-lg h-20 resize-none"
-                placeholder="블로그에 포함할 핵심 키워드나 주제를 입력하세요&#10;예: 수학 기초, 문제 해결 전략, 오답 노트..."
-              />
-            </div>
+
 
             {/* 추천 학습 모듈 */}
             <div>
               <h3 className="font-semibold mb-3">📚 추천 학습 모듈</h3>
+              <div className="text-xs text-gray-600 mb-2">
+                AI가 학습 상황을 분석해서 제안하는 다음 학습 방향입니다
+              </div>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {suggestedModules.map(module => (
                   <div key={module.id} className="p-2 bg-gray-50 rounded-lg border">
@@ -476,17 +456,17 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
               </div>
             </div>
 
-            {/* AI 블로그 스타일 가이드 */}
+            {/* AI 블로그 프롬프트 */}
             <div>
-              <h3 className="font-semibold mb-3">🤖 AI 스타일 가이드</h3>
+              <h3 className="font-semibold mb-3">🤖 AI 블로그 프롬프트</h3>
               <div className="text-xs text-gray-600 mb-2">
-                AI가 블로그를 작성할 때 참고할 스타일이나 톤앤매너를 입력하세요
+                AI에게 블로그 작성을 어떻게 해달라고 요청할지 구체적으로 작성하세요
               </div>
               <textarea
                 value={aiStyleGuide}
                 onChange={(e) => setAiStyleGuide(e.target.value)}
                 className="w-full p-2 border rounded-lg h-20 resize-none text-sm"
-                placeholder="예시:&#10;- 친근하고 편안한 톤으로 작성&#10;- 개인적인 경험과 느낀점 포함&#10;- 실용적인 팁과 조언 제공&#10;- 독자와 공감할 수 있는 내용으로..."
+                placeholder="예시:&#10;- 친근하고 편안한 톤으로 작성해줘&#10;- 개인적인 경험과 느낀점을 포함해서&#10;- 실용적인 팁과 조언을 제공해줘&#10;- 독자와 공감할 수 있는 내용으로&#10;- 전문적이고 학술적인 스타일로&#10;- 유머러스하고 재미있게 작성해줘&#10;- 초보자도 이해할 수 있게 설명해줘..."
               />
             </div>
 
@@ -563,6 +543,29 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
                     </div>
                   </div>
                 )}
+
+                {/* 발행 플랫폼 선택 */}
+                <div>
+                  <h3 className="font-semibold mb-3">🌐 발행 플랫폼</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms.map(platform => (
+                      <div
+                        key={platform.id}
+                        onClick={() => setSelectedPlatform(platform.id)}
+                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                          selectedPlatform === platform.id
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <platform.icon size={14} />
+                          <span className="text-xs font-medium">{platform.name}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -584,10 +587,10 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
                 >
                   <Share2 size={16} />
-                  {selectedPlatform === 'tistory' ? '티스토리에 발행' :
-                   selectedPlatform === 'naver' ? '네이버블로그에 발행' :
-                   selectedPlatform === 'notion' ? '노션에 저장' :
-                   'develog에 업로드'}
+                  {selectedPlatform === 'tistory' ? '티스토리 발행' :
+                   selectedPlatform === 'naver' ? '네이버블로그 발행' :
+                   selectedPlatform === 'notion' ? '노션 저장' :
+                   'develog 업로드'}
                 </button>
               </div>
             </div>

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
-import { X, Edit3, Eye, Share2, Download, Globe, FileText, BookOpen, TrendingUp, Target } from 'lucide-react'
+import { X, Edit3, Eye, Copy, Download, Globe, FileText, BookOpen, TrendingUp, Target } from 'lucide-react'
 
 const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onExport }) => {
   const [selectedTemplate, setSelectedTemplate] = useState('learning-review')
-  const [selectedPlatform, setSelectedPlatform] = useState('tistory')
+
   const [postTitle, setPostTitle] = useState('')
   const [postContent, setPostContent] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [suggestedModules, setSuggestedModules] = useState([])
   const [aiStyleGuide, setAiStyleGuide] = useState('')
   const [chatHistory, setChatHistory] = useState([])
 
@@ -16,7 +15,7 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
     {
       id: 'learning-review',
       name: '학습 후기형',
-      description: '오늘의 학습 내용과 개선점을 정리',
+      description: '개인적인 느낀점과 경험을 포함한 자연스러운 학습 후기',
       icon: BookOpen,
       color: 'bg-blue-100 text-blue-800'
     },
@@ -40,78 +39,24 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
       description: '학습 성과와 다음 계획을 점검',
       icon: TrendingUp,
       color: 'bg-orange-100 text-orange-800'
-    },
-    {
-      id: 'natural-blog',
-      name: '자연스러운 블로그형',
-      description: '개인적인 느낀점과 경험을 포함한 자연스러운 글',
-      icon: Edit3,
-      color: 'bg-pink-100 text-pink-800'
     }
   ]
 
-  const platforms = [
-    { id: 'tistory', name: '티스토리', icon: Globe, color: 'bg-orange-100 text-orange-800' },
-    { id: 'naver', name: '네이버블로그', icon: FileText, color: 'bg-green-100 text-green-800' },
-    { id: 'notion', name: '노션', icon: BookOpen, color: 'bg-black text-white' },
-    { id: 'develog', name: 'develog', icon: Share2, color: 'bg-blue-100 text-blue-800' }
-  ]
+
 
   useEffect(() => {
     if (isOpen && learningData) {
-      generateSuggestedModules()
       generateBlogContent()
     }
   }, [isOpen, selectedTemplate, learningData])
 
   useEffect(() => {
-    if (isOpen && learningData && (suggestedModules.length > 0 || aiStyleGuide || chatHistory.length > 0)) {
+    if (isOpen && learningData && (aiStyleGuide || chatHistory.length > 0)) {
       generateBlogContent()
     }
-  }, [suggestedModules, aiStyleGuide, chatHistory])
+  }, [aiStyleGuide, chatHistory])
 
-  const generateSuggestedModules = () => {
-    if (!learningData) return
-    
-    const modules = []
-    
-    // 학습 주제에 따른 모듈 제안
-    if (learningData.subject?.includes('수학')) {
-      modules.push(
-        { id: 'math-basics', name: '기초 수학', description: '기본 개념과 공식 정리' },
-        { id: 'math-problem-solving', name: '문제 해결 전략', description: '단계별 접근법과 팁' },
-        { id: 'math-practice', name: '실전 연습', description: '다양한 유형의 문제 풀이' }
-      )
-    } else if (learningData.subject?.includes('토익')) {
-      modules.push(
-        { id: 'toeic-vocab', name: '어휘 마스터', description: '토익 필수 어휘 정리' },
-        { id: 'toeic-grammar', name: '문법 정리', description: '토익 문법 포인트' },
-        { id: 'toeic-strategy', name: '전략 가이드', description: '파트별 풀이 전략' }
-      )
-    } else if (learningData.subject?.includes('영어')) {
-      modules.push(
-        { id: 'english-conversation', name: '회화 표현', description: '일상 회화 필수 표현' },
-        { id: 'english-grammar', name: '문법 기초', description: '실용 영어 문법' },
-        { id: 'english-listening', name: '청취 연습', description: '듣기 실력 향상' }
-      )
-    } else {
-      // 기본 모듈
-      modules.push(
-        { id: 'concept-review', name: '개념 복습', description: '핵심 개념 정리' },
-        { id: 'practice-test', name: '실전 연습', description: '문제 풀이 연습' },
-        { id: 'improvement-plan', name: '개선 계획', description: '약점 보완 전략' }
-      )
-    }
-    
-    // 정답률에 따른 추가 모듈
-    if (learningData.accuracy < 70) {
-      modules.push({ id: 'basic-foundation', name: '기초 다지기', description: '기본 개념부터 차근차근' })
-    } else if (learningData.accuracy > 85) {
-      modules.push({ id: 'advanced-challenge', name: '고급 도전', description: '더 어려운 문제에 도전' })
-    }
-    
-    setSuggestedModules(modules)
-  }
+
 
   const generateBlogContent = async () => {
     if (!learningData) return
@@ -129,155 +74,6 @@ const BlogExportModal = ({ isOpen, onClose, learningData, chatMessages = [], onE
     
     switch (selectedTemplate) {
       case 'learning-review':
-        title = `오늘의 학습 정리 - ${learningData.subject || '수학'} (${date})`
-        
-        // AI 스타일 가이드 적용
-        let reviewStyle = ''
-        if (aiStyleGuide) {
-          if (aiStyleGuide.includes('전문적') || aiStyleGuide.includes('학술')) {
-            reviewStyle = '\n\n본 학습 후기는 체계적인 분석과 객관적 데이터를 바탕으로 작성되었습니다.'
-          } else if (aiStyleGuide.includes('친근') || aiStyleGuide.includes('편안')) {
-            reviewStyle = '\n\n오늘 공부하면서 느낀 점들을 정리해봤어요. 여러분도 비슷한 경험이 있으신가요?'
-          }
-        }
-        
-        content = `## 📚 오늘의 학습 요약
-
-**학습 주제**: ${learningData.subject || '수학'}
-**학습 시간**: ${learningData.timeSpent || 0}분
-**정답률**: ${learningData.accuracy || 0}%
-
-${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n` : ''}${reviewStyle}
-
-### 🎯 주요 성과
-- 총 ${learningData.totalQuestions || 0}문제 중 ${learningData.correctAnswers || 0}문제 정답
-- ${learningData.weakConcepts?.length || 0}개 영역에서 개선 필요
-
-### ❌ 개선이 필요한 영역
-${(learningData.weakConcepts || []).map(concept => 
-  `- **${concept.name}**: ${concept.description} (${concept.count}문제)`
-).join('\n')}
-
-### 💡 오늘의 깨달음
-${(learningData.handwritingNotes || []).map(note => 
-  `- **${note.concept}**: ${note.userNote}\n  → AI 해설: ${note.aiExplanation}`
-).join('\n\n')}
-
-### 📚 추천 학습 모듈
-${suggestedModules.map(module => 
-  `- **${module.name}**: ${module.description}`
-).join('\n')}
-
-### 🚀 다음 학습 계획
-- ${learningData.weakConcepts?.[0]?.name || '핵심 개념'} 복습 및 보충 문제 풀이
-- 실수 패턴 분석을 통한 정확도 향상
-
----
-*NOMA AI가 생성한 학습 후기입니다.*`
-        break
-        
-      case 'problem-solving':
-        title = `어려웠던 문제 해결 과정 - ${learningData.subject || '수학'} (${date})`
-        content = `## 🎯 문제 해결 과정 기록
-
-**학습 주제**: ${learningData.subject || '수학'}
-**총 문제 수**: ${learningData.totalQuestions || 0}문제
-**정답률**: ${learningData.accuracy || 0}%
-
-${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n\n` : ''}
-
-### ❌ 오답 분석
-${(learningData.mistakes || []).map(mistake => 
-  `#### 문제 ${mistake.num}: ${mistake.text}
-**개념**: ${mistake.concept}
-**오답 원인**: ${mistake.note}
-**해결 방법**: ${mistake.concept} 개념을 다시 정리하고 유사 문제 연습 필요`
-).join('\n\n')}
-
-### 💡 문제 해결 전략
-1. **개념 이해**: 각 문제의 핵심 개념을 명확히 파악
-2. **단계별 접근**: 복잡한 문제는 작은 단위로 분해
-3. **오답 노트**: 실수한 부분을 체계적으로 기록
-
-### 🔍 개선 방향
-${(learningData.weakConcepts || []).map(concept => 
-  `- **${concept.name}**: ${concept.description}`
-).join('\n')}
-
-### 📚 추천 학습 모듈
-${suggestedModules.map(module => 
-  `- **${module.name}**: ${module.description}`
-).join('\n')}
-
----
-*NOMA AI가 생성한 문제 해결 과정입니다.*`
-        break
-        
-      case 'concept-summary':
-        title = `${learningData.subject || '수학'} 핵심 개념 완벽 정리 (${date})`
-        content = `## 📖 핵심 개념 정리
-
-**학습 주제**: ${learningData.subject || '수학'}
-**학습 시간**: ${learningData.timeSpent || 0}분
-
-### 🎯 주요 개념 요약
-${(learningData.weakConcepts || []).map(concept => 
-  `#### ${concept.name}
-**정의**: ${concept.description}
-**중요도**: ${concept.count}문제에서 출제
-**학습 포인트**: 기본 원리부터 응용까지 단계별 학습 필요`
-).join('\n\n')}
-
-### 📝 핵심 공식 및 원리
-${(learningData.handwritingNotes || []).map(note => 
-  `#### ${note.concept}
-**사용자 질문**: ${note.userNote}
-**AI 해설**: ${note.aiExplanation}`
-).join('\n\n')}
-
-### 🧠 학습 방법론
-1. **개념 이해**: 정의와 원리를 명확히 파악
-2. **예제 연습**: 다양한 유형의 문제로 적용 연습
-3. **오답 분석**: 실수한 부분을 통해 약점 파악
-4. **반복 학습**: 취약한 영역 집중 공부
-
----
-*NOMA AI가 생성한 개념 정리입니다.*`
-        break
-        
-      case 'progress-review':
-        title = `학습 성과 리뷰 및 다음 계획 - ${learningData.subject || '수학'} (${date})`
-        content = `## 📊 학습 성과 리뷰
-
-**학습 주제**: ${learningData.subject || '수학'}
-**학습 기간**: ${date}
-**총 투자 시간**: ${learningData.timeSpent || 0}분
-
-### 📈 성과 지표
-- **정답률**: ${learningData.accuracy || 0}% (목표: 90%+)
-- **문제 해결**: ${learningData.correctAnswers || 0}/${learningData.totalQuestions || 0}문제
-- **개선 영역**: ${learningData.weakConcepts?.length || 0}개
-
-### 🎯 주요 성과
-✅ ${learningData.correctAnswers || 0}문제 정답으로 기본 개념 이해도 확인
-✅ ${learningData.weakConcepts?.length || 0}개 취약 영역 식별로 집중 학습 방향 설정
-✅ AI 분석을 통한 객관적인 학습 진단
-
-### 🚧 개선 필요 영역
-${(learningData.weakConcepts || []).map(concept => 
-  `- **${concept.name}**: ${concept.description} (${concept.count}문제)`
-).join('\n')}
-
-### 📋 다음 학습 계획
-1. **단기 목표 (1주일)**: ${learningData.weakConcepts?.[0]?.name || '핵심 개념'} 완벽 정리
-2. **중기 목표 (1개월)**: 전체 정답률 85% 달성
-3. **장기 목표 (3개월)**: ${learningData.subject || '수학'} 영역 마스터
-
----
-*NOMA AI가 생성한 학습 성과 리뷰입니다.*`
-                break
-        
-      case 'natural-blog':
         title = `오늘 ${learningData.subject || '수학'} 공부하면서 느낀 점들 (${date})`
         
         // AI 스타일 가이드 적용
@@ -297,37 +93,37 @@ ${(learningData.weakConcepts || []).map(concept =>
           }
         }
         
-        content = `${naturalStyleIntro} ${learningData.subject || '수학'} 공부를 하면서 ${naturalStyleTone}
+        content = `${naturalStyleIntro} ${learningData.subject || '수학'} 공부를 했는데 ${naturalStyleTone}
 
-## 🎯 오늘 공부한 내용
+오늘 ${learningData.timeSpent || 0}분 동안 ${learningData.subject || '수학'} 공부를 했어요. 
 
-**학습 주제**: ${learningData.subject || '수학'}
-**공부 시간**: ${learningData.timeSpent || 0}분
-**정답률**: ${learningData.accuracy || 0}%
+간단한 요약
+• 학습 주제: ${learningData.subject || '수학'}
+• 공부 시간: ${learningData.timeSpent || 0}분
+• 정답률: ${learningData.accuracy || 0}%
 
-${aiStyleGuide ? `**AI 프롬프트**: ${aiStyleGuide}\n\n` : ''}## 💭 개인적인 느낀점
+${aiStyleGuide ? `AI 프롬프트: ${aiStyleGuide}\n\n` : ''}솔직한 후기
 
-### 1. 가장 어려웠던 부분
+가장 어려웠던 부분
 ${(learningData.weakConcepts || []).map((concept, index) => 
-  `${index + 1}. **${concept.name}**\n   - ${concept.description}\n   - ${concept.count}문제를 틀렸는데, 정말 헷갈렸어요.\n   - 이 부분은 더 연습이 필요할 것 같아요.`
+  `${index + 1}. ${concept.name}\n   ${concept.description} 부분에서 ${concept.count}문제를 틀렸어요\n   처음에는 쉬워 보였는데 막상 풀어보니 헷갈렸어요\n   이 부분은 더 연습이 필요할 것 같아요`
 ).join('\n\n')}
 
-### 2. 오늘 새롭게 알게 된 것
+새롭게 알게 된 것
 ${(learningData.handwritingNotes || []).map(note => 
-  `- **${note.concept}**: ${note.userNote}\n  → ${note.aiExplanation}\n  → 이걸 알게 되니까 훨씬 이해가 잘 되더라고요!`
+  `• ${note.concept}: ${note.userNote}\n  → ${note.aiExplanation}\n  → 이걸 알게 되니까 이해가 잘 되더라고요`
 ).join('\n\n')}
 
-### 3. 다음에 더 잘하고 싶은 부분
+다음에 더 잘하고 싶은 부분
 ${learningData.weakConcepts?.[0] ? 
-  `- **${learningData.weakConcepts[0].name}**: 이번에는 ${learningData.weakConcepts[0].description} 때문에 많이 틀렸는데, 다음에는 꼭 맞출 수 있을 것 같아요!` : 
-  '- 기본 개념을 더 탄탄하게 다지고 싶어요.'
+  `• ${learningData.weakConcepts[0].name}: 이번에는 ${learningData.weakConcepts[0].description} 때문에 많이 틀렸는데, 다음에는 꼭 맞출 수 있을 것 같아요` : 
+  '• 기본 개념을 더 탄탄하게 다지고 싶어요'
 }
 
-## 🚀 앞으로의 계획
-
-${suggestedModules.map((module, index) => 
-  `${index + 1}. **${module.name}**: ${module.description}\n   - 이 모듈을 통해 부족한 부분을 채워나가고 싶어요.`
-).join('\n\n')}
+앞으로의 계획
+• 기본 개념 복습: ${learningData.weakConcepts?.[0]?.name || '핵심 개념'}을 더 탄탄하게 다지기
+• 실전 연습: 다양한 유형의 문제로 응용 능력 향상
+• 오답 분석: 실수 패턴을 파악해서 개선점 찾기
 
 ${chatHistory.length > 0 ? `## 💬 AI 코치와의 대화
 
@@ -352,8 +148,176 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
 다음 포스팅에서는 더 좋은 결과와 함께 돌아올게요! 😊
 
 ---
-*NOMA AI가 생성한 자연스러운 블로그 포스트입니다.*`
+*NOMA AI가 생성한 자연스러운 학습 후기입니다.*`
         break
+        
+      case 'problem-solving':
+        title = `[${learningData.subject || '수학'}] 어려웠던 문제들, 이렇게 해결했어요 (${date})`
+        content = `오늘 공부한 내용
+
+오늘 ${learningData.subject || '수학'} 문제를 ${learningData.totalQuestions || 0}문제 풀었는데, 정말 헷갈리는 문제들이 많았어요. 
+
+간단한 요약
+• 도전한 문제: ${learningData.totalQuestions || 0}문제
+• 성공률: ${learningData.accuracy || 0}%
+• 학습 시간: ${learningData.timeSpent || 0}분
+
+${aiStyleGuide ? `AI 프롬프트: ${aiStyleGuide}\n\n` : ''}어려웠던 문제들
+
+문제 ${learningData.mistakes?.[0]?.num || '1'} - ${learningData.mistakes?.[0]?.text || '기본 개념 문제'}
+${(learningData.mistakes || []).map((mistake, index) => 
+  `${index + 1}. ${mistake.text}\n   핵심 개념: ${mistake.concept}\n   왜 틀렸을까?: ${mistake.note}\n   해결 방법: ${mistake.concept} 개념을 다시 정리하고 유사 문제 연습이 필요해요\n   학습 포인트: 이 문제는 ${mistake.concept}의 기본기를 테스트하는 문제였어요`
+).join('\n\n')}
+
+문제 해결을 위한 전략
+
+1단계: 개념 이해
+• 각 문제의 핵심 개념을 명확히 파악하기
+• 기본 공식과 원리를 체득하기
+
+2단계: 단계별 접근
+• 복잡한 문제는 작은 단위로 분해하기
+• 중간 과정을 꼼꼼히 체크하기
+
+3단계: 오답 노트
+• 실수한 부분을 체계적으로 기록하기
+• 유사한 문제를 찾아서 연습하기
+
+다음에 꼭 해보고 싶은 것
+
+${(learningData.weakConcepts || []).map(concept => 
+  `• ${concept.name}: ${concept.description} - 이 부분을 집중적으로 연습해서 다음에는 꼭 맞출 수 있을 거예요`
+).join('\n')}
+
+마무리
+
+오늘 문제들이 생각보다 어려웠어요. 하지만 하나씩 차근차근 풀어보면서 많은 걸 배웠어요. 
+
+가장 중요한 깨달음: 문제가 어려울수록 기본 개념이 중요하다는 걸 다시 한번 느꼈어요. 복잡해 보이는 문제도 결국 기본기를 바탕으로 해결할 수 있거든요.
+
+다음 포스팅에서는 더 좋은 결과와 함께 돌아올게요.
+
+---
+*NOMA AI가 생성한 문제 해결 과정입니다.*`
+        break
+        
+      case 'concept-summary':
+        title = `[${learningData.subject || '수학'}] 핵심 개념 정리 (${date})`
+        content = `${learningData.subject || '수학'} 핵심 개념 정리
+
+오늘 ${learningData.subject || '수학'}을 ${learningData.timeSpent || 0}분 동안 공부하면서 중요한 개념들을 정리했어요. 
+
+이 포스팅을 읽으면 얻을 수 있는 것
+• ${learningData.subject || '수학'}의 핵심 개념 이해
+• 실제 문제에 적용하는 방법
+• 실수하기 쉬운 부분 체크
+• 효율적인 학습 방법
+
+${aiStyleGuide ? `AI 프롬프트: ${aiStyleGuide}\n\n` : ''}핵심 개념들
+
+${learningData.weakConcepts?.[0]?.name || '기본 개념'}
+${(learningData.weakConcepts || []).map(concept => 
+  `${concept.name}\n   정의: ${concept.description}\n   중요도: ${concept.count}문제에서 출제\n   학습 포인트: 기본 원리부터 응용까지 단계별 학습이 필요해요\n   팁: 이 개념을 완벽하게 이해하면 관련 문제들이 훨씬 쉬워질 거예요`
+).join('\n\n')}
+
+핵심 공식과 원리
+
+${(learningData.handwritingNotes || []).map(note => 
+  `${note.concept}\n   내가 궁금했던 점: ${note.userNote}\n   AI가 알려준 핵심: ${note.aiExplanation}\n   실제 활용법: 이 개념을 이해하면 비슷한 문제들을 쉽게 풀 수 있어요`
+).join('\n\n')}
+
+학습 방법론
+
+1단계: 개념 이해
+• 정의와 원리를 명확히 파악하기
+• 기본 공식의 의미를 이해하기
+
+2단계: 예제 연습
+• 다양한 유형의 문제로 적용 연습하기
+• 쉬운 문제부터 차근차근 도전하기
+
+3단계: 오답 분석
+• 실수한 부분을 통해 약점 파악하기
+• 유사한 실수를 방지하는 방법 찾기
+
+4단계: 반복 학습
+• 취약한 영역 집중 공부하기
+• 정기적으로 복습하기
+
+마무리
+
+${learningData.subject || '수학'}은 체계적으로 학습해야 하는 과목이에요. 오늘 정리한 개념들을 바탕으로 차근차근 연습하다 보면 분명히 실력이 늘 거예요.
+
+오늘의 다짐: ${learningData.weakConcepts?.[0]?.name || '핵심 개념'}을 완벽하게 마스터해서 다음에는 관련 문제들을 모두 맞출 수 있을 거예요.
+
+다음 포스팅에서는 더 깊이 있는 개념 정리와 함께 돌아올게요.
+
+---
+*NOMA AI가 생성한 개념 정리입니다.*`
+        break
+        
+      case 'progress-review':
+        title = `[${learningData.subject || '수학'}] ${date} 학습 성과 리뷰 (${date})`
+        content = `${learningData.subject || '수학'} 학습 성과 리뷰
+
+오늘 ${date}에 ${learningData.subject || '수학'} 공부를 ${learningData.timeSpent || 0}분 동안 했어요. 솔직히 말하면 결과가 기대했던 것과는 조금 달랐지만, 그래도 많은 걸 배웠어요.
+
+오늘의 성과 요약
+• 학습 주제: ${learningData.subject || '수학'}
+• 투자 시간: ${learningData.timeSpent || 0}분
+• 도전한 문제: ${learningData.totalQuestions || 0}문제
+• 성공률: ${learningData.accuracy || 0}%
+
+${aiStyleGuide ? `AI 프롬프트: ${aiStyleGuide}\n\n` : ''}오늘의 주요 성과
+
+잘한 부분들
+• ${learningData.correctAnswers || 0}문제 정답: 기본 개념 이해도가 괜찮아요
+• ${learningData.weakConcepts?.length || 0}개 취약 영역 식별: 이제 무엇을 더 공부해야 할지 명확해졌어요
+• AI 분석 활용: 객관적인 진단으로 효율적인 학습 방향을 찾았어요
+
+개선이 필요한 부분들
+${(learningData.weakConcepts || []).map(concept => 
+  `• ${concept.name}: ${concept.description} (${concept.count}문제 틀림)\n   → 이 부분을 집중적으로 공부하면 정답률이 크게 올라갈 거예요`
+).join('\n')}
+
+앞으로의 학습 계획
+
+단기 목표 (1주일)
+• ${learningData.weakConcepts?.[0]?.name || '핵심 개념'} 완벽 정리: 기본기를 탄탄하게 다지기
+• 오답 노트 작성: 실수한 부분을 체계적으로 정리하기
+• 유사 문제 연습: 같은 유형의 문제를 여러 번 풀어보기
+
+중기 목표 (1개월)
+• 전체 정답률 85% 달성: 꾸준한 연습으로 실력 향상하기
+• 취약 영역 보완: 약한 부분을 강점으로 만들기
+• 응용 문제 도전: 기본 개념을 바탕으로 어려운 문제에 도전하기
+
+장기 목표 (3개월)
+• ${learningData.subject || '수학'} 영역 마스터: 완벽한 이해와 응용 능력 갖추기
+• 다른 학습자들에게 도움: 경험을 바탕으로 학습 팁 공유하기
+• 지속적인 성장: 새로운 도전과 학습 동기 유지하기
+
+오늘의 깨달음
+
+가장 중요한 것: 학습은 단순히 문제를 푸는 것이 아니라, 자신을 이해하고 개선하는 과정이라는 걸 다시 한번 느꼈어요. 
+
+${learningData.accuracy < 70 ? '정답률이 낮다고 해서 실망할 필요 없어요. 오히려 "이 부분을 더 공부해야겠다"는 명확한 방향을 찾은 거예요.' : 
+  learningData.accuracy > 85 ? '정답률이 높아서 뿌듯하지만, 더 높은 목표를 향해 나아가고 싶어요. 완벽함에는 끝이 없거든요.' : 
+  '괜찮은 성과였지만, 더 나은 결과를 위해 노력하고 싶어요. 작은 진전도 큰 성취예요.'}
+
+마무리
+
+오늘 ${learningData.subject || '수학'} 공부를 통해 많은 걸 배웠어요. 실수도 했고, 깨달음도 있었어요. 
+
+내일의 다짐: 오늘 발견한 취약점들을 하나씩 채워나가면서, 더 나은 내가 되고 싶어요.
+
+다음 포스팅에서는 더 좋은 결과와 함께 돌아올게요.
+
+---
+*NOMA AI가 생성한 학습 성과 리뷰입니다.*`
+                break
+        
+
       }
       
       setPostTitle(title)
@@ -361,17 +325,14 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
       setIsGenerating(false)
     }
 
-  const handleExport = () => {
-    if (onExport) {
-      onExport({
-        template: selectedTemplate,
-        platform: selectedPlatform,
-        title: postTitle,
-        content: postContent,
-        learningData
-      })
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(`제목: ${postTitle}\n\n${postContent}`)
+      alert('블로그 콘텐츠가 클립보드에 복사되었습니다!')
+    } catch (err) {
+      console.error('복사 실패:', err)
+      alert('복사에 실패했습니다.')
     }
-    onClose()
   }
 
   if (!isOpen) return null
@@ -390,16 +351,7 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
         <div className="flex h-[calc(90vh-120px)]">
           {/* Left Panel - 설정 */}
           <div className="w-1/3 border-r p-6 space-y-6 overflow-y-auto">
-            {/* 필드 설명 헬프 */}
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="text-xs text-blue-800">
-                <div className="font-medium mb-1">💡 각 필드의 역할</div>
-                <div className="space-y-1">
-                  <div>• <strong>AI 블로그 프롬프트</strong>: AI에게 블로그 작성을 어떻게 해달라고 요청</div>
-                  <div>• <strong>추천 학습 모듈</strong>: AI가 제안하는 다음 학습 방향</div>
-                </div>
-              </div>
-            </div>
+
             {/* 템플릿 선택 */}
             <div>
               <h3 className="font-semibold mb-3">📋 템플릿 선택</h3>
@@ -440,21 +392,7 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
 
 
 
-            {/* 추천 학습 모듈 */}
-            <div>
-              <h3 className="font-semibold mb-3">📚 추천 학습 모듈</h3>
-              <div className="text-xs text-gray-600 mb-2">
-                AI가 학습 상황을 분석해서 제안하는 다음 학습 방향입니다
-              </div>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {suggestedModules.map(module => (
-                  <div key={module.id} className="p-2 bg-gray-50 rounded-lg border">
-                    <div className="font-medium text-sm">{module.name}</div>
-                    <div className="text-xs text-gray-600">{module.description}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
 
             {/* AI 블로그 프롬프트 */}
             <div>
@@ -544,26 +482,11 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
                   </div>
                 )}
 
-                {/* 발행 플랫폼 선택 */}
-                <div>
-                  <h3 className="font-semibold mb-3">🌐 발행 플랫폼</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {platforms.map(platform => (
-                      <div
-                        key={platform.id}
-                        onClick={() => setSelectedPlatform(platform.id)}
-                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all text-center ${
-                          selectedPlatform === platform.id
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <platform.icon size={14} />
-                          <span className="text-xs font-medium">{platform.name}</span>
-                        </div>
-                      </div>
-                    ))}
+                {/* 토큰 소모 안내 */}
+                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="text-xs text-yellow-800">
+                    <div className="font-medium mb-1">💰 토큰 사용 안내</div>
+                    <div>블로그 콘텐츠 생성 시 약 {Math.floor(Math.random() * 50) + 100}토큰이 소모됩니다.</div>
                   </div>
                 </div>
               </div>
@@ -583,14 +506,11 @@ ${learningData.accuracy < 70 ? '아직 부족한 부분이 많지만, 차근차�
                   {isGenerating ? '생성 중...' : '🔄 재생성'}
                 </button>
                 <button
-                  onClick={handleExport}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                  onClick={handleCopy}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                 >
-                  <Share2 size={16} />
-                  {selectedPlatform === 'tistory' ? '티스토리 발행' :
-                   selectedPlatform === 'naver' ? '네이버블로그 발행' :
-                   selectedPlatform === 'notion' ? '노션 저장' :
-                   'develog 업로드'}
+                  <Copy size={16} />
+                  콘텐츠 복사
                 </button>
               </div>
             </div>

@@ -29,35 +29,12 @@ const Progress = ({ value = 0 }) => (
 
 const sleep = (ms) => new Promise((r)=>setTimeout(r, ms))
 
-async function apiIdentifyExam() {
-  await sleep(1500) // 1.5초로 증가
-  return {
-    label: '2024학년도 수학 수능 시험지',
-    confidence: 0.86,
-    decision: 'auto',
+// 교재별 데이터 정의
+const EXAM_DATA = {
+  '2024학년도 수학 수능 시험지': {
+    subject: '수학',
     scope: ['확률과통계','수학Ⅱ'],
-    alternatives: [
-      { label: '2025년 8월 30일자 인바디 측정표', confidence: 0.78 },
-      { label: '5급 공개경쟁채용시험(행정) 상황판단영역 가', confidence: 0.72 },
-      { label: '세법 모의고사 1회차', confidence: 0.65 },
-      { label: 'SQDL', confidence: 0.58 }
-    ],
-    signals: { rule: 0.92, clf: 0.83, embed: 0.78 }
-  }
-}
-
-async function apiProcessOCR(){
-  await sleep(900)
-  return { pages: 8, questions: 20, notesDetected: true }
-}
-
-async function apiDiagnose(){
-  await sleep(800)
-  return {
-    score: 78,
     totalQuestions: 20,
-    correctAnswers: 13,
-    accuracy: 65,
     weakConcepts: [
       { name: '분수 나눗셈', description: '역수 적용 원리 미흡', count: 3 },
       { name: '속력 공식', description: '단위 변환 계산 오류', count: 2 },
@@ -86,37 +63,113 @@ async function apiDiagnose(){
         type: 'difficulty',
         aiAnalysis: '사용자가 속력 공식에서 단위 변환 과정을 어려워함',
         aiExplanation: '속력은 거리를 시간으로 나눈 값입니다. km/h를 m/s로 변환할 때는 1000÷3600을 곱하면 됩니다. 1km/h = 0.278m/s입니다.'
-      },
-      {
-        concept: '확률 기초', 
-        userNote: '표본공간이 뭐지?', 
-        type: 'question',
-        aiAnalysis: '사용자가 확률의 기본 개념인 표본공간을 모르고 있음',
-        aiExplanation: '표본공간은 실험에서 일어날 수 있는 모든 결과의 집합입니다. 주사위를 던질 때 표본공간은 {1,2,3,4,5,6}입니다.'
-      },
-      {
-        concept: '도형의 성질', 
-        userNote: '각도 관계 모르겠음', 
-        type: 'confusion',
-        aiAnalysis: '사용자가 도형에서 각도 간의 관계를 혼란스러워함',
-        aiExplanation: '삼각형의 세 각의 합은 180도입니다. 평행선과 한 직선이 만날 때 생기는 동위각, 엇각은 서로 같습니다.'
       }
     ],
-    coveredConcepts: [
-      '수와 연산', '문자와 식', '함수', '기하', '확률과 통계'
+    plan: [
+      {title:'분수 나눗셈 원리 복습', time:'25분', details:'시각화 예제로 나눗셈=곱셈의 역수 연결'},
+      {title:'속력/거리/시간 단위 변환', time:'20분', details:'km/h ↔ m/s 변환 퀴즈 10문항'},
+      {title:'확률 기초 재훈련', time:'30분', details:'카드/주사위 표본공간 퀴즈'}
+    ]
+  },
+  '세법 모의고사 1회차': {
+    subject: '세법',
+    scope: ['소득세법','법인세법','부가가치세법'],
+    totalQuestions: 25,
+    weakConcepts: [
+      { name: '소득세 과세표준', description: '종합소득 계산 오류', count: 4 },
+      { name: '법인세 손금산입', description: '손금불산입 항목 혼동', count: 3 },
+      { name: '부가가치세 면세', description: '면세와 영세율 구분 미흡', count: 3 },
+      { name: '세무조정', description: '일시차이 영구차이 구분', count: 2 },
+      { name: '원천징수', description: '원천징수 대상 소득 구분', count: 2 }
     ],
-    summaryComment: '수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다. 특히 역수 개념과 단위 변환 연습이 필요합니다.'
+    mistakes: [
+      {num:3, text:'종합소득 계산', concept:'소득세 과세표준', note:'필요경비 공제 누락'},
+      {num:7, text:'손금불산입 항목', concept:'법인세 손금산입', note:'접대비 한도 계산 오류'},
+      {num:12, text:'면세와 영세율', concept:'부가가치세 면세', note:'개념 구분 혼동'},
+      {num:16, text:'세무조정', concept:'세무조정', note:'일시차이와 영구차이 혼동'},
+      {num:20, text:'원천징수 대상', concept:'원천징수', note:'원천징수 의무 대상 구분 미흡'}
+    ],
+    handwritingNotes: [
+      {
+        concept: '소득세 과세표준', 
+        userNote: '종합소득 계산이 복잡함', 
+        type: 'difficulty',
+        aiAnalysis: '사용자가 종합소득 계산 과정을 어려워함',
+        aiExplanation: '종합소득 = 이자소득 + 배당소득 + 사업소득 + 근로소득 + 연금소득 + 기타소득입니다. 각 소득별 필요경비를 공제하고 합산합니다.'
+      },
+      {
+        concept: '부가가치세 면세', 
+        userNote: '면세와 영세율 차이점?', 
+        type: 'question',
+        aiAnalysis: '사용자가 면세와 영세율의 개념 차이를 혼동함',
+        aiExplanation: '면세는 부가가치세를 부과하지 않는 것이고, 영세율은 세율이 0%인 것입니다. 면세는 매입세액 공제가 안되지만, 영세율은 매입세액 공제가 됩니다.'
+      }
+    ],
+    plan: [
+      {title:'소득세법 기초 개념 정리', time:'40분', details:'소득 유형별 과세표준 계산 방법'},
+      {title:'법인세 손금 항목 분류', time:'30분', details:'손금산입/불산입 기준과 한도 계산'},
+      {title:'부가가치세 면세와 영세율', time:'25분', details:'개념 구분과 세액 계산 실습'}
+    ]
+  }
+}
+
+let selectedExamType = '2024학년도 수학 수능 시험지' // 선택된 교재 저장
+
+async function apiIdentifyExam() {
+  await sleep(1500)
+  return {
+    label: selectedExamType,
+    confidence: 0.86,
+    decision: 'auto',
+    scope: EXAM_DATA[selectedExamType].scope,
+    alternatives: [
+      { label: '2024학년도 수학 수능 시험지', confidence: 0.86 },
+      { label: '세법 모의고사 1회차', confidence: 0.78 },
+      { label: '2025년 8월 30일자 인바디 측정표', confidence: 0.65 },
+      { label: '5급 공개경쟁채용시험(행정) 상황판단영역 가', confidence: 0.58 }
+    ],
+    signals: { rule: 0.92, clf: 0.83, embed: 0.78 }
+  }
+}
+
+async function apiProcessOCR(){
+  await sleep(900)
+  const examData = EXAM_DATA[selectedExamType]
+  return { 
+    pages: selectedExamType === '세법 모의고사 1회차' ? 12 : 8, 
+    questions: examData.totalQuestions, 
+    notesDetected: true 
+  }
+}
+
+async function apiDiagnose(){
+  await sleep(800)
+  const examData = EXAM_DATA[selectedExamType]
+  const correctAnswers = Math.floor(examData.totalQuestions * 0.65)
+  const accuracy = Math.round((correctAnswers / examData.totalQuestions) * 100)
+  
+  return {
+    score: selectedExamType === '세법 모의고사 1회차' ? 72 : 78,
+    totalQuestions: examData.totalQuestions,
+    correctAnswers: correctAnswers,
+    accuracy: accuracy,
+    weakConcepts: examData.weakConcepts,
+    mistakes: examData.mistakes,
+    handwritingNotes: examData.handwritingNotes,
+    coveredConcepts: selectedExamType === '세법 모의고사 1회차' 
+      ? ['소득세법', '법인세법', '부가가치세법', '세무조정', '원천징수']
+      : ['수와 연산', '문자와 식', '함수', '기하', '확률과 통계'],
+    summaryComment: selectedExamType === '세법 모의고사 1회차'
+      ? '세법의 기본 개념은 이해하고 있으나, 소득세 과세표준 계산과 부가가치세 면세/영세율 구분에서 어려움을 보입니다. 특히 세무조정과 원천징수 관련 실무 연습이 필요합니다.'
+      : '수학의 기초 개념들은 잘 이해하고 있으나, 분수 나눗셈과 속력 공식에서 단위 변환에 어려움을 보입니다. 특히 역수 개념과 단위 변환 연습이 필요합니다.'
   }
 }
 
 async function apiCoaching(scope){
   await sleep(700)
+  const examData = EXAM_DATA[selectedExamType]
   return {
-    plan: [
-      {title:'분수 나눗셈 원리 복습', time:'25분', details:'시각화 예제로 나눗셈=곱셈의 역수 연결'},
-      {title:'속력/거리/시간 단위 변환', time:'20분', details:'km/h ↔ m/s 변환 퀴즈 10문항'},
-      {title:'확률 기초 재훈련', time:'30분', details:'카드/주사위 표본공간 퀴즈'}
-    ],
+    plan: examData.plan,
     scope
   }
 }
@@ -874,9 +927,27 @@ export default function GuidedJourneyDemo(){
             <h3 className="text-lg font-medium mb-4">AI가 인식한 시험지가 맞나요?</h3>
             <div className="space-y-3 mb-6">
               {examOptions.map((option, index) => (
-                <div key={index} className="p-3 border rounded-lg hover:bg-gray-50">
+                <div 
+                  key={index} 
+                  className={`p-3 border rounded-lg transition-colors ${
+                    option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차'
+                      ? `hover:bg-gray-50 cursor-pointer ${selectedExamType === option ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`
+                      : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-70'
+                  }`}
+                  onClick={() => {
+                    // 세법과 수능수학만 실제로 선택 가능
+                    if (option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차') {
+                      selectedExamType = option;
+                      setExamInfo({...examInfo, label: option, scope: EXAM_DATA[option]?.scope || examInfo.scope});
+                    }
+                  }}
+                >
                   <div className="font-medium">{option}</div>
                   {index === 0 && <span className="text-sm text-purple-600">(가장 높은 신뢰도)</span>}
+                  {selectedExamType === option && <span className="text-sm text-blue-600">(선택됨)</span>}
+                  {!(option === '2024학년도 수학 수능 시험지' || option === '세법 모의고사 1회차') && 
+                    <span className="text-sm text-gray-500">(데모 버전에서는 지원되지 않음)</span>
+                  }
                 </div>
               ))}
             </div>
@@ -884,6 +955,12 @@ export default function GuidedJourneyDemo(){
               <Button 
                 variant="outline" 
                 onClick={() => {
+                  // 데모용: 랜덤으로 세법과 수학 중 하나 선택
+                  const availableExams = ['2024학년도 수학 수능 시험지', '세법 모의고사 1회차'];
+                  const randomExam = availableExams[Math.floor(Math.random() * availableExams.length)];
+                  selectedExamType = randomExam;
+                  setExamInfo({...examInfo, label: randomExam, scope: EXAM_DATA[randomExam].scope});
+                  
                   setShowConfirmModal(false)
                   setCurrent('scope')
                 }}

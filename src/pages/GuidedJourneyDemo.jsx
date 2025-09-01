@@ -247,7 +247,7 @@ export default function GuidedJourneyDemo(){
         setShowLoadingModal(true)
         const r = await apiIdentifyExam()
         setExamInfo(r)
-        setExamOptions([r.label, ...r.alternatives.map(alt => alt.label)])
+        setExamOptions([r.label, ...r.alternatives.filter(alt => alt.label !== r.label).map(alt => alt.label)])
         setShowConfirmModal(true)
         log(`시험 자동 인식: ${r.label} (신뢰도 ${Math.round(r.confidence*100)}%)`)
         
@@ -955,11 +955,12 @@ export default function GuidedJourneyDemo(){
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  // 데모용: 랜덤으로 세법과 수학 중 하나 선택
-                  const availableExams = ['2024학년도 수학 수능 시험지', '세법 모의고사 1회차'];
-                  const randomExam = availableExams[Math.floor(Math.random() * availableExams.length)];
-                  selectedExamType = randomExam;
-                  setExamInfo({...examInfo, label: randomExam, scope: EXAM_DATA[randomExam].scope});
+                  // 사용자가 선택한 교재 사용 (선택하지 않았다면 랜덤)
+                  if (!selectedExamType || !EXAM_DATA[selectedExamType]) {
+                    const availableExams = ['2024학년도 수학 수능 시험지', '세법 모의고사 1회차'];
+                    selectedExamType = availableExams[Math.floor(Math.random() * availableExams.length)];
+                  }
+                  setExamInfo({...examInfo, label: selectedExamType, scope: EXAM_DATA[selectedExamType].scope});
                   
                   setShowConfirmModal(false)
                   setCurrent('scope')

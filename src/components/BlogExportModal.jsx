@@ -574,11 +574,11 @@ ${aiStyleGuide ? `\n💡 ${aiStyleGuide}\n` : ''}
 
 
 
-            {/* AI 블로그 프롬프트 */}
+            {/* AI 프롬프트 */}
             <div>
-              <h3 className="font-semibold mb-3">🤖 AI 블로그 프롬프트</h3>
+              <h3 className="font-semibold mb-3">🤖 AI 프롬프트</h3>
               <div className="text-xs text-gray-600 mb-2">
-                AI에게 블로그 작성을 어떻게 해달라고 요청할지 구체적으로 작성하세요
+                콘텐츠 작성 가이드라인을 작성하세요.
               </div>
               <textarea
                 value={aiStyleGuide}
